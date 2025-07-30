@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Node/React
+frontend/node_modules/
+frontend/build/
+
+# Docker
+*.log
+*.env
+
+# VSCode
+.vscode/
+
+# MacOS/Linux/Windows system files
+.DS_Store
+Thumbs.db
