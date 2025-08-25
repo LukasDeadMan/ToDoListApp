@@ -8,6 +8,9 @@ services:
     environment:
       - FLASK_APP=run.py
       - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./backend:/app  # assim alterações locais refletem no container
 
@@ -19,5 +22,6 @@ services:
       - CHOKIDAR_USEPOLLING=true  # melhora o hot reload no docker
     volumes:
       - ./frontend:/app
+      - /app/node_modules         # impede que o bind apague node_modules do container
     depends_on:
       - backend

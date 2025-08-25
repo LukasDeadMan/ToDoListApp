@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # Comando para iniciar o Flask (ajuste se seu entrypoint for diferente)
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]

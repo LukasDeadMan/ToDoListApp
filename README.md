@@ -22,19 +22,22 @@ Criar uma aplicação web fullstack usando **React no frontend** e **Flask no ba
    Docker Desktop (Windows/Mac) ou Docker + Docker Compose (Linux)
 
 2. **Clone o repositório:**
+
    ```bash
    git clone https://github.com/seu-usuario/ToDoApp.git
    cd ToDoApp
 
 3. **Build e execute os containers:**
+
     ```bash
     docker-compose up --build  
     ```
+
     Isso irá subir:
 
-    - Backend Flask: http://localhost:5000
+    - Backend Flask: <http://localhost:5000>
 
-    - Frontend React: http://localhost:3000
+    - Frontend React: <http://localhost:3000>
 
 4. **Pronto!**  
     Agora é só começar a desenvolver nos diretórios frontend e backend. As alterações refletem automaticamente dentro dos containers.  
@@ -71,7 +74,6 @@ ToDoApp/
 └── README.md
 ```
 
-
 ---
 
 ## ✅ Funcionalidades (roadmap)
@@ -94,9 +96,9 @@ ToDoApp/
 - [ ] Criar API Flask com Blueprints
 - [ ] Criar modelos: `User`, `Task`
 - [ ] Implementar rotas:
-  - `POST /register`
-  - `POST /login`
-  - `GET /logout`
+  - [ ]`POST /register`
+  - [ ]`POST /login`
+  - [ ]`GET /logout`
 - [ ] Retornar tokens JWT (ou usar Flask-Login com sessões)
 - [ ] CORS para permitir requisições do React
 
@@ -127,7 +129,6 @@ ToDoApp/
 ---
 
 ## 📚 Referências
-
 
 ---
 
