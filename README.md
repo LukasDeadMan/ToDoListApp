@@ -24,7 +24,7 @@ Criar uma aplicação web fullstack usando **React no frontend** e **Flask no ba
 2. **Clone o repositório:**
 
    ```bash
-   git clone https://github.com/seu-usuario/ToDoApp.git
+   git clone https://github.com/LukasDeadMan/ToDoListApp.git
    cd ToDoApp
 
 3. **Build e execute os containers:**
@@ -53,7 +53,7 @@ ToDoApp/
 │   │   ├── __init__.py
 │   │   ├── routes.py
 │   │   ├── models.py
-│   │   └── database.db
+│   │   └── extensions.py
 │   ├── run.py
 │   ├── requirements.txt
 │   ├── Dockerfile
@@ -92,15 +92,16 @@ ToDoApp/
 
 ### Semana 1 – Backend (Flask + Auth)
 
-- [x] Montar estrutura inicial backend com Flask e Docker
-- [ ] Criar API Flask com Blueprints
-- [ ] Criar modelos: `User`, `Task`
-- [ ] Implementar rotas:
-  - [ ]`POST /register`
-  - [ ]`POST /login`
-  - [ ]`GET /logout`
-- [ ] Retornar tokens JWT (ou usar Flask-Login com sessões)
-- [ ] CORS para permitir requisições do React
+- [x] Montar estrutura inicial backend com Flask e Docker  
+- [x] Configuração e criação do banco de dados (SQLite)  
+- [ ] Criar API Flask com Blueprints  
+- [ ] Criar modelos: `User`, `Task`  
+- [ ] Implementar rotas:  
+  - [ ] `POST /register`  
+  - [ ] `POST /login`  
+  - [ ] `GET /logout`  
+- [ ] Retornar tokens JWT (ou usar Flask-Login com sessões)  
+- [ ] CORS para permitir requisições do React  
 
 ### Semana 2 – Frontend com React
 

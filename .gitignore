@@ -5,6 +5,9 @@ __pycache__/
 *.pyd
 *.db
 
+# Flask
+backend/instance
+
 # Node/React
 frontend/node_modules/
 frontend/build/

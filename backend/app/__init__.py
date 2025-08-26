@@ -1,15 +1,18 @@
 import os
 
 from flask import Flask, jsonify
+from .extensions import db, migrate
 
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
-    )
+
+    app.config.from_mapping(SECRET_KEY='dev')
+    app.config['SQLALCHEMY_DATABASE_URI'] = \
+        f"sqlite:///{os.path.join(app.instance_path, 'app.db')}"
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -24,9 +27,16 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+
+    db.init_app(app)
+
+    from . import models
+
+    migrate.init_app(app, db)
+
     # a simple page that says hello
-    @app.route('/')
-    def hello():
-        return 'Hello, World!'
+    @app.route('/status')
+    def status():
+        return {"ok": True}
 
     return app
