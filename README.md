@@ -131,6 +131,8 @@ ToDoApp/
 
 ## 📚 Referências
 
+- Documentação Flask: <https://flask.palletsprojects.com/en/stable/>
+
 ---
 
 ## 🚀 Extras (opcional)
