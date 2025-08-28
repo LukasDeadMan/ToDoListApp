@@ -33,8 +33,8 @@ def create_app(test_config=None):
     from . import models
     migrate.init_app(app, db)
 
-    from .routes import bp
-    app.register_blueprint(bp, url_prefix="/api/v1")
+    from .routes import init_app as init_routes
+    init_routes(app)
 
     # a simple page that says hello
     @app.route('/status')

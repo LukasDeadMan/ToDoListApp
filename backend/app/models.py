@@ -11,8 +11,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)    # único
     password = db.Column(db.String(200), nullable=False)   # hash da senha
 
-    todos = db.relationship(
-        "Todo",
+    tasks = db.relationship(
+        "Task",
         back_populates="user",
         cascade="all, delete-orphan"
     )
@@ -28,12 +28,12 @@ class User(db.Model):
         return f"<User {self.nickname}>"
 
 
-class Todo(db.Model):
-    __tablename__ = "todos"
+class Task(db.Model):
+    __tablename__ = "tasks"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     done = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    user = db.relationship("User", back_populates="todos")
+    user = db.relationship("User", back_populates="tasks")
