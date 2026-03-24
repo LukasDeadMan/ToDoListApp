@@ -1,6 +1,7 @@
 # 📝 ToDo List App
 [🇧🇷 Português](#portugues) | [🇺🇸 English](#english)
 
+<a id="portugues"></a>
 ## 🇧🇷 Português
 
 ## 🎯 Objetivo
@@ -147,7 +148,7 @@ ToDoApp/
 - [ ] Página de perfil do usuário
 - [ ] Testes unitários (Jest ou Pytest)
 
-
+<a id="english"></a>
 ## 🇺🇸 English
 
 ## 🎯 Goal
