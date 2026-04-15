@@ -1,10 +1,14 @@
-"""historical rename no-op
+"""rename legacy todos table to tasks
 
 Revision ID: 5d911f034f26
 Revises: 377daad0598b
 Create Date: 2025-08-28 01:55:33.153390
 
 """
+from alembic import op
+import sqlalchemy as sa
+
+
 # revision identifiers, used by Alembic.
 revision = '5d911f034f26'
 down_revision = '377daad0598b'
@@ -12,14 +16,23 @@ branch_labels = None
 depends_on = None
 
 
+def table_names():
+    """Return the current table names for online migrations."""
+
+    return set(sa.inspect(op.get_bind()).get_table_names())
+
+
 def upgrade():
-    # English: Fresh databases already create the final tasks table in the
-    # initial migration, so this historical revision no longer needs to mutate
-    # schema objects.
-    # Portugues: Bancos novos ja criam a tabela final tasks na migracao
-    # inicial, entao esta revisao historica nao precisa mais alterar o schema.
-    pass
+    tables = table_names()
+    if "todos" not in tables or "tasks" in tables:
+        return
+
+    op.rename_table('todos', 'tasks')
 
 
 def downgrade():
-    pass
+    tables = table_names()
+    if "tasks" not in tables or "todos" in tables:
+        return
+
+    op.rename_table('tasks', 'todos')
