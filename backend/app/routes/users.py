@@ -18,6 +18,25 @@ def get_json():
     return request.get_json(silent=True) or {}
 
 
+def normalize_text(value, *, lowercase=False):
+    """Normalize optional text fields received from the API."""
+
+    if not isinstance(value, str):
+        return ""
+
+    normalized = value.strip()
+    if lowercase:
+        normalized = normalized.lower()
+
+    return normalized
+
+
+def is_blank(value):
+    """Check whether a value should be considered empty input."""
+
+    return not isinstance(value, str) or not value.strip()
+
+
 def user_to_dict(user):
     """Serialize a User model into API-friendly JSON.
 
@@ -42,21 +61,29 @@ def register():
     """
 
     data = get_json()
+    normalized_fields = {
+        "username": normalize_text(data.get("username")),
+        "nickname": normalize_text(data.get("nickname")),
+        "email": normalize_text(data.get("email"), lowercase=True),
+    }
     required_fields = ("username", "nickname", "email", "password")
-    missing_fields = [field for field in required_fields if not data.get(field)]
+    missing_fields = [field for field in required_fields if is_blank(data.get(field))]
     if missing_fields:
         return jsonify({"error": f"missing fields: {', '.join(missing_fields)}"}), 400
 
     existing_user = User.query.filter(
-        or_(User.email == data["email"], User.nickname == data["nickname"])
+        or_(
+            User.email == normalized_fields["email"],
+            User.nickname == normalized_fields["nickname"],
+        )
     ).first()
     if existing_user:
         return jsonify({"error": "email or nickname already in use"}), 409
 
     user = User(
-        username=data["username"],
-        nickname=data["nickname"],
-        email=data["email"],
+        username=normalized_fields["username"],
+        nickname=normalized_fields["nickname"],
+        email=normalized_fields["email"],
         password="",
     )
     user.set_password(data["password"])
@@ -76,10 +103,12 @@ def login():
     """
 
     data = get_json()
-    identifier = data.get("email") or data.get("nickname")
+    email = normalize_text(data.get("email"), lowercase=True)
+    nickname = normalize_text(data.get("nickname"))
+    identifier = email or nickname
     password = data.get("password")
 
-    if not identifier or not password:
+    if not identifier or is_blank(password):
         return jsonify({"error": "email or nickname and password are required"}), 400
 
     user = User.query.filter(
@@ -92,7 +121,7 @@ def login():
     return jsonify({"message": "login successful", "user": user_to_dict(user)})
 
 
-@bp.get("/logout")
+@bp.post("/logout")
 @login_required
 def logout():
     """Close the current authenticated session.
@@ -146,19 +175,31 @@ def update_user(user_id):
 
     data = get_json()
 
-    if "nickname" in data and data["nickname"] != current_user.nickname:
-        if User.query.filter_by(nickname=data["nickname"]).first():
+    if "username" in data:
+        username = normalize_text(data["username"])
+        if not username:
+            return jsonify({"error": "username cannot be empty"}), 400
+        current_user.username = username
+
+    if "nickname" in data:
+        nickname = normalize_text(data["nickname"])
+        if not nickname:
+            return jsonify({"error": "nickname cannot be empty"}), 400
+        if nickname != current_user.nickname and User.query.filter_by(nickname=nickname).first():
             return jsonify({"error": "nickname already in use"}), 409
+        current_user.nickname = nickname
 
-    if "email" in data and data["email"] != current_user.email:
-        if User.query.filter_by(email=data["email"]).first():
+    if "email" in data:
+        email = normalize_text(data["email"], lowercase=True)
+        if not email:
+            return jsonify({"error": "email cannot be empty"}), 400
+        if email != current_user.email and User.query.filter_by(email=email).first():
             return jsonify({"error": "email already in use"}), 409
+        current_user.email = email
 
-    current_user.username = data.get("username", current_user.username)
-    current_user.nickname = data.get("nickname", current_user.nickname)
-    current_user.email = data.get("email", current_user.email)
-
-    if "password" in data and data["password"]:
+    if "password" in data:
+        if is_blank(data["password"]):
+            return jsonify({"error": "password cannot be empty"}), 400
         current_user.set_password(data["password"])
 
     db.session.commit()

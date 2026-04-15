@@ -1,9 +1,21 @@
 import os
+import secrets
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_login import current_user
+from werkzeug.exceptions import HTTPException
 
 from .extensions import cors, db, login_manager, migrate
+
+
+def _env_flag(name, default=False):
+    """Parse a boolean flag from environment variables."""
+
+    value = os.environ.get(name)
+    if value is None:
+        return default
+
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def create_app(test_config=None):
@@ -20,10 +32,18 @@ def create_app(test_config=None):
     # English: Default local configuration.
     # Portugues: Configuracao padrao para ambiente local.
     app.config.from_mapping(
-        SECRET_KEY="dev",
-        SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, 'app.db')}",
+        SECRET_KEY=os.environ.get("SECRET_KEY"),
+        SQLALCHEMY_DATABASE_URI=os.environ.get(
+            "DATABASE_URL",
+            f"sqlite:///{os.path.join(app.instance_path, 'app.db')}",
+        ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        FRONTEND_ORIGIN="http://localhost:3000",
+        FRONTEND_ORIGIN=os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000"),
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE=os.environ.get("SESSION_COOKIE_SAMESITE", "Lax"),
+        SESSION_COOKIE_SECURE=_env_flag("SESSION_COOKIE_SECURE"),
+        REMEMBER_COOKIE_HTTPONLY=True,
+        REMEMBER_COOKIE_SECURE=_env_flag("REMEMBER_COOKIE_SECURE"),
     )
 
     if test_config is None:
@@ -34,6 +54,15 @@ def create_app(test_config=None):
         # English: Tests can inject a custom configuration.
         # Portugues: Os testes podem injetar uma configuracao customizada.
         app.config.from_mapping(test_config)
+
+    if not app.config.get("SECRET_KEY"):
+        if app.config.get("TESTING"):
+            app.config["SECRET_KEY"] = "test-secret-key"
+        else:
+            app.config["SECRET_KEY"] = secrets.token_hex(32)
+            app.logger.warning(
+                "SECRET_KEY not configured; using an ephemeral value for this process."
+            )
 
     # English: SQLite is stored inside the instance folder.
     # Portugues: O SQLite fica dentro da pasta de instancia.
@@ -76,6 +105,27 @@ def create_app(test_config=None):
         """
 
         return jsonify({"error": "authentication required"}), 401
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(error):
+        """Return JSON errors for API routes.
+
+        English: Keeps API failures machine-readable for the frontend.
+        Portugues: Mantem as falhas da API legiveis por maquina para o frontend.
+        """
+
+        if not request.path.startswith("/api/"):
+            return error
+
+        return (
+            jsonify(
+                {
+                    "error": error.name.lower(),
+                    "message": error.description,
+                }
+            ),
+            error.code,
+        )
 
     from .routes import init_app as init_routes
 

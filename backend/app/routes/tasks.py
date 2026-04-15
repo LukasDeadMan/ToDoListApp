@@ -17,6 +17,24 @@ def get_json():
     return request.get_json(silent=True) or {}
 
 
+def normalize_title(value):
+    """Normalize a task title before persisting it."""
+
+    if not isinstance(value, str):
+        return ""
+
+    return value.strip()
+
+
+def parse_done(value):
+    """Validate the task completion flag."""
+
+    if isinstance(value, bool):
+        return value
+
+    raise ValueError("done must be a boolean")
+
+
 def task_to_dict(task):
     """Serialize a Task model into JSON.
 
@@ -43,7 +61,7 @@ def create_task():
     """
 
     data = get_json()
-    title = data.get("title", "").strip()
+    title = normalize_title(data.get("title"))
     if not title:
         return jsonify({"error": "title is required"}), 400
 
@@ -97,13 +115,16 @@ def update_task(task_id):
     data = get_json()
 
     if "title" in data:
-        title = data["title"].strip()
+        title = normalize_title(data["title"])
         if not title:
             return jsonify({"error": "title cannot be empty"}), 400
         task.title = title
 
     if "done" in data:
-        task.done = bool(data["done"])
+        try:
+            task.done = parse_done(data["done"])
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
 
     db.session.commit()
     return jsonify({"message": "task updated", "task": task_to_dict(task)})
