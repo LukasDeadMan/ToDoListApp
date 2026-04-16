@@ -9,7 +9,7 @@ const authHighlights = [
   "Atualize prioridades em poucos cliques",
 ];
 const authSecurityNotes = [
-  "Senha forte com letra maiuscula, minuscula e numero",
+  "Senha forte com letra maiuscula, minuscula, numero e sem espacos nas pontas",
   "Acesso direto ao painel depois do cadastro",
   "Perfil e tarefas protegidos na mesma sessao",
 ];
@@ -252,7 +252,7 @@ export default function AuthPage({ isBusy, mode, onLogin, onNavigate, onRegister
             </h2>
             <p className="page-copy">
               {isRegister
-                ? "A ideia aqui e abrir a conta, validar uma senha forte e levar voce direto para um painel limpo."
+                ? "A ideia aqui e abrir a conta, validar uma senha forte sem espacos escondidos e levar voce direto para um painel limpo."
                 : "Login enxuto, sem blocos brigando por atencao. O foco fica em entrar e continuar o trabalho."}
             </p>
 
@@ -303,7 +303,7 @@ export default function AuthPage({ isBusy, mode, onLogin, onNavigate, onRegister
           <p className="eyebrow">Acesso seguro</p>
           <h3>Senhas fracas deixam de passar no cadastro.</h3>
           <p className="page-copy">
-            Agora o cadastro e a troca de senha exigem uma combinacao minima de tamanho, letra maiuscula, minuscula e numero.
+            Agora o cadastro e a troca de senha exigem uma combinacao minima de tamanho, letra maiuscula, minuscula, numero e nenhum espaco nas pontas.
           </p>
         </div>
 

@@ -19,6 +19,19 @@ def _env_flag(name, default=False):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _env_int(name, default):
+    """Parse an integer value from environment variables."""
+
+    value = os.environ.get(name)
+    if value is None:
+        return default
+
+    try:
+        return int(value.strip())
+    except ValueError:
+        return default
+
+
 def _is_development_mode():
     """Detect whether the app is running in a local development mode."""
 
@@ -74,6 +87,9 @@ def create_app(test_config=None):
     remember_cookie_secure = _env_flag(
         "REMEMBER_COOKIE_SECURE", default=session_cookie_secure
     )
+    login_max_attempts = _env_int("LOGIN_MAX_ATTEMPTS", 5)
+    login_window_seconds = _env_int("LOGIN_WINDOW_SECONDS", 300)
+    login_block_seconds = _env_int("LOGIN_BLOCK_SECONDS", 300)
 
     # English: Default local configuration.
     # Portugues: Configuracao padrao para ambiente local.
@@ -92,6 +108,9 @@ def create_app(test_config=None):
         REMEMBER_COOKIE_HTTPONLY=True,
         REMEMBER_COOKIE_SECURE=remember_cookie_secure,
         SESSION_COOKIE_CROSS_SITE=cross_site_cookies,
+        LOGIN_MAX_ATTEMPTS=login_max_attempts,
+        LOGIN_WINDOW_SECONDS=login_window_seconds,
+        LOGIN_BLOCK_SECONDS=login_block_seconds,
     )
 
     if test_config is None:
@@ -176,8 +195,14 @@ def create_app(test_config=None):
     # Portugues: Importa os models antes das migracoes para preparar o metadata.
     from . import models  # noqa: F401
     from .models import User
+    from .security import LoginAttemptLimiter
 
     migrate.init_app(app, db)
+    app.extensions["login_attempt_limiter"] = LoginAttemptLimiter(
+        max_attempts=app.config["LOGIN_MAX_ATTEMPTS"],
+        window_seconds=app.config["LOGIN_WINDOW_SECONDS"],
+        block_seconds=app.config["LOGIN_BLOCK_SECONDS"],
+    )
 
     @login_manager.user_loader
     def load_user(user_id):

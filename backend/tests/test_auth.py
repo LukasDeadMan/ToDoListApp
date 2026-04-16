@@ -32,7 +32,7 @@ class AuthApiTestCase(ApiTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.get_json(),
-            {"error": "missing fields: username, nickname, email, password"},
+            {"error": "Campos obrigatorios: username, nickname, email, password."},
         )
 
     def test_register_rejects_untrusted_origin(self):
@@ -64,7 +64,24 @@ class AuthApiTestCase(ApiTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.get_json(),
-            {"error": "choose a less predictable password"},
+            {"error": "Escolha uma senha menos previsivel."},
+        )
+
+    def test_register_rejects_passwords_with_edge_spaces(self):
+        response = self.client.post(
+            "/api/v1/users/register",
+            json={
+                "username": "Lucas",
+                "nickname": "lukas",
+                "email": "lucas@example.com",
+                "password": "Teste123A ",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json(),
+            {"error": "Nao use espacos no inicio ou no fim da senha."},
         )
 
     def test_register_rejects_duplicate_email_after_normalization(self):
@@ -79,7 +96,7 @@ class AuthApiTestCase(ApiTestCase):
         )
 
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.get_json(), {"error": "email or nickname already in use"})
+        self.assertEqual(response.get_json(), {"error": "Email ou nickname ja estao em uso."})
 
     def test_register_rejects_duplicate_nickname_after_normalization(self):
         self.register_user()
@@ -93,7 +110,19 @@ class AuthApiTestCase(ApiTestCase):
         )
 
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.get_json(), {"error": "email or nickname already in use"})
+        self.assertEqual(response.get_json(), {"error": "Email ou nickname ja estao em uso."})
+
+    def test_register_normalizes_nickname_with_leading_at(self):
+        response = self.register_user_with(
+            self.client,
+            username="Lucas",
+            nickname="@lukas",
+            email="lucas@example.com",
+            password="Teste123A",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json()["nickname"], "lukas")
 
     def test_login_accepts_normalized_nickname(self):
         self.register_user()
@@ -101,6 +130,18 @@ class AuthApiTestCase(ApiTestCase):
         response = self.login_user_with(
             self.client,
             nickname="  lukas  ",
+            password="Teste123A",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["user"]["nickname"], "lukas")
+
+    def test_login_accepts_nickname_prefixed_with_at(self):
+        self.register_user()
+
+        response = self.login_user_with(
+            self.client,
+            nickname="@lukas",
             password="Teste123A",
         )
 
@@ -125,7 +166,7 @@ class AuthApiTestCase(ApiTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.get_json(),
-            {"error": "email or nickname and password are required"},
+            {"error": "Email ou nickname e senha sao obrigatorios."},
         )
 
     def test_login_rejects_invalid_password(self):
@@ -138,7 +179,37 @@ class AuthApiTestCase(ApiTestCase):
         )
 
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.get_json(), {"error": "invalid credentials"})
+        self.assertEqual(response.get_json(), {"error": "Credenciais invalidas."})
+
+    def test_login_blocks_repeated_failed_attempts(self):
+        self.register_user()
+        self.client.post("/api/v1/users/logout")
+
+        for attempt in range(4):
+            response = self.login_user_with(
+                self.client,
+                email="lucas@example.com",
+                password="senha-errada",
+            )
+            self.assertEqual(
+                response.status_code,
+                401,
+                f"attempt {attempt + 1} should still fail normally",
+            )
+
+        response = self.login_user_with(
+            self.client,
+            email="lucas@example.com",
+            password="senha-errada",
+        )
+
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Muitas tentativas de login. Aguarde alguns instantes antes de tentar novamente.",
+        )
+        self.assertEqual(response.get_json()["retry_after"], 300)
+        self.assertEqual(response.headers["Retry-After"], "300")
 
     def test_login_rejects_untrusted_origin(self):
         self.register_user()

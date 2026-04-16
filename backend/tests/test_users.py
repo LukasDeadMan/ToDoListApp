@@ -53,7 +53,7 @@ class UsersApiTestCase(ApiTestCase):
         response = self.client.put("/api/v1/users/1", json={"email": "   "})
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json(), {"error": "email cannot be empty"})
+        self.assertEqual(response.get_json(), {"error": "Email nao pode ficar vazio."})
 
     def test_update_user_rejects_duplicate_nickname(self):
         first_client = self.client
@@ -77,7 +77,7 @@ class UsersApiTestCase(ApiTestCase):
         response = second_client.put("/api/v1/users/2", json={"nickname": "  lukas  "})
 
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.get_json(), {"error": "nickname already in use"})
+        self.assertEqual(response.get_json(), {"error": "Nickname ja esta em uso."})
 
     def test_update_user_rejects_duplicate_email(self):
         first_client = self.client
@@ -101,7 +101,7 @@ class UsersApiTestCase(ApiTestCase):
         response = second_client.put("/api/v1/users/2", json={"email": " LUCAS@example.com "})
 
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.get_json(), {"error": "email already in use"})
+        self.assertEqual(response.get_json(), {"error": "Email ja esta em uso."})
 
     def test_update_user_updates_profile_and_password(self):
         self.register_user()
@@ -148,7 +148,22 @@ class UsersApiTestCase(ApiTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.get_json(),
-            {"error": "choose a less predictable password"},
+            {"error": "Escolha uma senha menos previsivel."},
+        )
+
+    def test_update_user_rejects_passwords_with_edge_spaces(self):
+        self.register_user()
+        self.login_user()
+
+        response = self.client.put(
+            "/api/v1/users/1",
+            json={"password": "NovaSenha1 "},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json(),
+            {"error": "Nao use espacos no inicio ou no fim da senha."},
         )
 
     def test_delete_user_forbids_access_to_another_user(self):

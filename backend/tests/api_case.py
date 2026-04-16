@@ -17,6 +17,9 @@ class ApiTestCase(unittest.TestCase):
                 "TESTING": True,
                 "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path}",
                 "FRONTEND_ORIGINS": [self.frontend_origin],
+                "LOGIN_MAX_ATTEMPTS": 5,
+                "LOGIN_WINDOW_SECONDS": 300,
+                "LOGIN_BLOCK_SECONDS": 300,
             }
         )
         self.client = self.make_client()

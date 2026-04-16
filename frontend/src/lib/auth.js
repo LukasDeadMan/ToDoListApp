@@ -9,6 +9,16 @@ const weakPasswords = new Set([
 
 export function buildLoginPayload(identifier, password) {
   const normalizedIdentifier = (identifier || "").trim();
+  const isAtPrefixedNickname =
+    normalizedIdentifier.startsWith("@") &&
+    !normalizedIdentifier.slice(1).includes("@");
+
+  if (isAtPrefixedNickname) {
+    return {
+      nickname: normalizedIdentifier.slice(1),
+      password,
+    };
+  }
 
   if (normalizedIdentifier.includes("@")) {
     return {
@@ -25,10 +35,18 @@ export function buildLoginPayload(identifier, password) {
 
 export const passwordChecks = [
   {
+    id: "edge-spaces",
+    label: "Sem espacos no inicio ou no fim",
+    test(password) {
+      const value = password || "";
+      return Boolean(value) && value === value.trim();
+    },
+  },
+  {
     id: "length",
     label: "Pelo menos 8 caracteres",
     test(password) {
-      return (password || "").trim().length >= 8;
+      return (password || "").length >= 8;
     },
   },
   {
@@ -62,7 +80,11 @@ export function getPasswordChecklist(password) {
 }
 
 export function validatePasswordStrength(password) {
-  const normalizedPassword = (password || "").trim();
+  const normalizedPassword = password || "";
+
+  if (normalizedPassword !== normalizedPassword.trim()) {
+    return "Nao use espacos no inicio ou no fim da senha.";
+  }
 
   if (normalizedPassword.length < 8) {
     return "Use pelo menos 8 caracteres na senha.";

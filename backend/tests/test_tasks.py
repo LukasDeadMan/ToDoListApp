@@ -12,7 +12,7 @@ class TasksApiTestCase(ApiTestCase):
         response = self.create_task("   ")
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json(), {"error": "title is required"})
+        self.assertEqual(response.get_json(), {"error": "Titulo obrigatorio."})
 
     def test_create_task_normalizes_title(self):
         self.register_user()
@@ -76,7 +76,7 @@ class TasksApiTestCase(ApiTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json(), {"error": "title cannot be empty"})
+        self.assertEqual(response.get_json(), {"error": "Titulo nao pode ficar vazio."})
 
     def test_update_task_rejects_non_boolean_done(self):
         self.register_user()
@@ -89,7 +89,7 @@ class TasksApiTestCase(ApiTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json(), {"error": "done must be a boolean"})
+        self.assertEqual(response.get_json(), {"error": "O campo done precisa ser booleano."})
 
     def test_missing_task_returns_json_404(self):
         self.register_user()
@@ -108,7 +108,7 @@ class TasksApiTestCase(ApiTestCase):
         response = self.client.delete(f"/api/v1/tasks/{task_id}")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), {"message": "task deleted"})
+        self.assertEqual(response.get_json(), {"message": "Tarefa removida."})
         with self.app.app_context():
             self.assertEqual(Task.query.count(), 0)
 

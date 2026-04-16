@@ -222,7 +222,7 @@ export default function ProfilePage({
 
             <p className="page-copy">
               Se for trocar a senha, use pelo menos 8 caracteres com letra maiuscula,
-              minuscula e numero.
+              minuscula, numero e sem espacos no inicio ou no fim.
             </p>
 
             {error ? <div className="inline-alert inline-alert--error">{error}</div> : null}

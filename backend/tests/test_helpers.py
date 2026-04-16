@@ -59,7 +59,7 @@ class TaskHelpersTestCase(unittest.TestCase):
         self.assertFalse(parse_done(False))
 
     def test_parse_done_rejects_non_boolean_values(self):
-        with self.assertRaisesRegex(ValueError, "done must be a boolean"):
+        with self.assertRaisesRegex(ValueError, "O campo done precisa ser booleano."):
             parse_done("false")
 
     def test_task_to_dict_serializes_created_at(self):

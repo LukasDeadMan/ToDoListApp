@@ -237,6 +237,38 @@ describe("App smoke flows", () => {
     expect(usersApi.register).not.toHaveBeenCalled();
   });
 
+  test("submits login with @nickname as a nickname payload", async () => {
+    mockAnonymousSession();
+    usersApi.login.mockResolvedValue({
+      message: "Login efetuado com sucesso.",
+      user: authenticatedUser,
+    });
+    tasksApi.list.mockResolvedValue(initialTasks);
+
+    renderAt("/login");
+
+    await screen.findByRole("heading", {
+      name: /acesse seu painel/i,
+    });
+
+    await userEvent.type(screen.getByLabelText(/email ou nickname/i), "@lucas");
+    await userEvent.type(screen.getByLabelText(/^senha$/i), "Teste123A");
+    await userEvent.click(screen.getByRole("button", { name: /^entrar$/i }));
+
+    await waitFor(() => {
+      expect(usersApi.login).toHaveBeenCalledWith({
+        nickname: "lucas",
+        password: "Teste123A",
+      });
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /lucas, suas tarefas/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   test("keeps create disabled while the first task load is in progress", async () => {
     usersApi.me.mockResolvedValue(authenticatedUser);
     let resolveTasks;

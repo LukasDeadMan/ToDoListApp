@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import or_
 import re
@@ -46,27 +46,84 @@ def is_blank(value):
     return not isinstance(value, str) or not value.strip()
 
 
+def normalize_nickname(value):
+    """Normalize nicknames and ignore an optional leading @ marker."""
+
+    normalized = normalize_text(value)
+    if normalized.startswith("@"):
+        return normalized[1:].strip()
+
+    return normalized
+
+
+def nickname_variants(value):
+    """Return normalized nickname variants compatible with legacy @ prefixes."""
+
+    normalized = normalize_nickname(value)
+    if not normalized:
+        return ()
+
+    return tuple({normalized, f"@{normalized}"})
+
+
+def get_login_rate_limit_keys(identifier):
+    """Build stable rate-limit keys for the current client and identifier."""
+
+    client_ip = request.remote_addr or "unknown"
+    keys = [f"ip:{client_ip}"]
+
+    if identifier:
+        keys.append(f"identifier:{identifier.lower()}")
+
+    return tuple(keys)
+
+
+def get_login_limiter():
+    """Resolve the shared login limiter instance from the application."""
+
+    return current_app.extensions["login_attempt_limiter"]
+
+
+def make_rate_limit_response(retry_after):
+    """Return a consistent JSON response for blocked login bursts."""
+
+    response = jsonify(
+        {
+            "error": (
+                "Muitas tentativas de login. Aguarde alguns instantes antes de tentar novamente."
+            ),
+            "retry_after": retry_after,
+        }
+    )
+    response.status_code = 429
+    response.headers["Retry-After"] = str(retry_after)
+    return response
+
+
 def get_password_error(password):
     """Return a validation error for weak passwords, or None when valid."""
 
     if not isinstance(password, str):
-        return "password is required"
+        return "Senha obrigatoria."
 
     normalized = password.strip()
+    if password != normalized:
+        return "Nao use espacos no inicio ou no fim da senha."
+
     if len(normalized) < 8:
-        return "password must have at least 8 characters"
+        return "A senha precisa ter pelo menos 8 caracteres."
 
     if normalized.lower() in WEAK_PASSWORDS:
-        return "choose a less predictable password"
+        return "Escolha uma senha menos previsivel."
 
     if re.search(r"[a-z]", normalized) is None:
-        return "password must include a lowercase letter"
+        return "A senha precisa incluir uma letra minuscula."
 
     if re.search(r"[A-Z]", normalized) is None:
-        return "password must include an uppercase letter"
+        return "A senha precisa incluir uma letra maiuscula."
 
     if re.search(r"\d", normalized) is None:
-        return "password must include a number"
+        return "A senha precisa incluir um numero."
 
     return None
 
@@ -97,13 +154,22 @@ def register():
     data = get_json()
     normalized_fields = {
         "username": normalize_text(data.get("username")),
-        "nickname": normalize_text(data.get("nickname")),
+        "nickname": normalize_nickname(data.get("nickname")),
         "email": normalize_text(data.get("email"), lowercase=True),
     }
     required_fields = ("username", "nickname", "email", "password")
     missing_fields = [field for field in required_fields if is_blank(data.get(field))]
     if missing_fields:
-        return jsonify({"error": f"missing fields: {', '.join(missing_fields)}"}), 400
+        return jsonify({"error": f"Campos obrigatorios: {', '.join(missing_fields)}."}), 400
+
+    if not normalized_fields["username"]:
+        return jsonify({"error": "Nome nao pode ficar vazio."}), 400
+
+    if not normalized_fields["nickname"]:
+        return jsonify({"error": "Nickname nao pode ficar vazio."}), 400
+
+    if not normalized_fields["email"]:
+        return jsonify({"error": "Email nao pode ficar vazio."}), 400
 
     password_error = get_password_error(data.get("password"))
     if password_error:
@@ -112,11 +178,11 @@ def register():
     existing_user = User.query.filter(
         or_(
             User.email == normalized_fields["email"],
-            User.nickname == normalized_fields["nickname"],
+            User.nickname.in_(nickname_variants(normalized_fields["nickname"])),
         )
     ).first()
     if existing_user:
-        return jsonify({"error": "email or nickname already in use"}), 409
+        return jsonify({"error": "Email ou nickname ja estao em uso."}), 409
 
     user = User(
         username=normalized_fields["username"],
@@ -143,21 +209,35 @@ def login():
 
     data = get_json()
     email = normalize_text(data.get("email"), lowercase=True)
-    nickname = normalize_text(data.get("nickname"))
+    nickname = normalize_nickname(data.get("nickname"))
     identifier = email or nickname
     password = data.get("password")
+    limiter = get_login_limiter()
+    rate_limit_keys = get_login_rate_limit_keys(identifier)
 
     if not identifier or is_blank(password):
-        return jsonify({"error": "email or nickname and password are required"}), 400
+        return jsonify({"error": "Email ou nickname e senha sao obrigatorios."}), 400
 
-    user = User.query.filter(
-        or_(User.email == identifier, User.nickname == identifier)
-    ).first()
+    retry_after = max(limiter.get_retry_after(key) for key in rate_limit_keys)
+    if retry_after:
+        return make_rate_limit_response(retry_after)
+
+    if email:
+        user = User.query.filter_by(email=identifier).first()
+    else:
+        user = User.query.filter(User.nickname.in_(nickname_variants(identifier))).first()
+
     if user is None or not user.check_password(password):
-        return jsonify({"error": "invalid credentials"}), 401
+        retry_after = max(limiter.register_failure(key) for key in rate_limit_keys)
+        if retry_after:
+            return make_rate_limit_response(retry_after)
 
+        return jsonify({"error": "Credenciais invalidas."}), 401
+
+    for key in rate_limit_keys:
+        limiter.reset(key)
     login_user(user)
-    return jsonify({"message": "login successful", "user": user_to_dict(user)})
+    return jsonify({"message": "Login efetuado com sucesso.", "user": user_to_dict(user)})
 
 
 @bp.post("/logout")
@@ -170,7 +250,7 @@ def logout():
     """
 
     logout_user()
-    return jsonify({"message": "logout successful"})
+    return jsonify({"message": "Sessao encerrada com sucesso."})
 
 
 @bp.get("/me")
@@ -217,35 +297,39 @@ def update_user(user_id):
     if "username" in data:
         username = normalize_text(data["username"])
         if not username:
-            return jsonify({"error": "username cannot be empty"}), 400
+            return jsonify({"error": "Nome nao pode ficar vazio."}), 400
         current_user.username = username
 
     if "nickname" in data:
-        nickname = normalize_text(data["nickname"])
+        nickname = normalize_nickname(data["nickname"])
         if not nickname:
-            return jsonify({"error": "nickname cannot be empty"}), 400
-        if nickname != current_user.nickname and User.query.filter_by(nickname=nickname).first():
-            return jsonify({"error": "nickname already in use"}), 409
+            return jsonify({"error": "Nickname nao pode ficar vazio."}), 400
+        current_nickname = normalize_nickname(current_user.nickname)
+        if nickname != current_nickname and User.query.filter(
+            User.id != current_user.id,
+            User.nickname.in_(nickname_variants(nickname)),
+        ).first():
+            return jsonify({"error": "Nickname ja esta em uso."}), 409
         current_user.nickname = nickname
 
     if "email" in data:
         email = normalize_text(data["email"], lowercase=True)
         if not email:
-            return jsonify({"error": "email cannot be empty"}), 400
+            return jsonify({"error": "Email nao pode ficar vazio."}), 400
         if email != current_user.email and User.query.filter_by(email=email).first():
-            return jsonify({"error": "email already in use"}), 409
+            return jsonify({"error": "Email ja esta em uso."}), 409
         current_user.email = email
 
     if "password" in data:
         if is_blank(data["password"]):
-            return jsonify({"error": "password cannot be empty"}), 400
+            return jsonify({"error": "Senha nao pode ficar vazia."}), 400
         password_error = get_password_error(data["password"])
         if password_error:
             return jsonify({"error": password_error}), 400
         current_user.set_password(data["password"])
 
     db.session.commit()
-    return jsonify({"message": "user updated", "user": user_to_dict(current_user)})
+    return jsonify({"message": "Perfil atualizado.", "user": user_to_dict(current_user)})
 
 
 @bp.delete("/<int:user_id>")
@@ -265,4 +349,4 @@ def delete_user(user_id):
     db.session.delete(user)
     db.session.commit()
 
-    return jsonify({"message": "user deleted"})
+    return jsonify({"message": "Conta removida com sucesso."})

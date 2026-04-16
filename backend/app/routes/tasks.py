@@ -32,7 +32,7 @@ def parse_done(value):
     if isinstance(value, bool):
         return value
 
-    raise ValueError("done must be a boolean")
+    raise ValueError("O campo done precisa ser booleano.")
 
 
 def task_to_dict(task):
@@ -63,7 +63,7 @@ def create_task():
     data = get_json()
     title = normalize_title(data.get("title"))
     if not title:
-        return jsonify({"error": "title is required"}), 400
+        return jsonify({"error": "Titulo obrigatorio."}), 400
 
     task = Task(title=title, user_id=current_user.id)
     db.session.add(task)
@@ -117,7 +117,7 @@ def update_task(task_id):
     if "title" in data:
         title = normalize_title(data["title"])
         if not title:
-            return jsonify({"error": "title cannot be empty"}), 400
+            return jsonify({"error": "Titulo nao pode ficar vazio."}), 400
         task.title = title
 
     if "done" in data:
@@ -127,7 +127,7 @@ def update_task(task_id):
             return jsonify({"error": str(exc)}), 400
 
     db.session.commit()
-    return jsonify({"message": "task updated", "task": task_to_dict(task)})
+    return jsonify({"message": "Tarefa atualizada.", "task": task_to_dict(task)})
 
 
 @bp.delete("/<int:task_id>")
@@ -143,4 +143,4 @@ def delete_task(task_id):
     db.session.delete(task)
     db.session.commit()
 
-    return jsonify({"message": "task deleted"})
+    return jsonify({"message": "Tarefa removida."})
