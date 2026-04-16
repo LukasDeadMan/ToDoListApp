@@ -19,6 +19,10 @@ frontend/build/
 # VSCode
 .vscode/
 
+# Claude Code
+.claude/
+
 # MacOS/Linux/Windows system files
 .DS_Store
 Thumbs.db
+

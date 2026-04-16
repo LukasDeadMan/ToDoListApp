@@ -1,44 +1,17 @@
 .auth-stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.86fr);
-  gap: 20px;
-  align-items: stretch;
-  min-height: calc(100vh - 150px);
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
 }
 
 .auth-panel {
-  min-height: 100%;
-}
-
-.auth-panel--form {
+  width: min(100%, 480px);
   gap: 24px;
 }
 
 .auth-panel__copy {
-  max-width: 520px;
-}
-
-.auth-form-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.62fr);
-  gap: 18px;
-  align-items: start;
-}
-
-.auth-form,
-.auth-context-card {
-  min-height: 100%;
-}
-
-.auth-context-card,
-.auth-security-card {
-  padding: 18px;
-  border-radius: 20px;
-  border: 1px solid var(--line-soft);
-  background:
-    linear-gradient(180deg, rgba(32, 34, 46, 0.94), rgba(24, 25, 35, 0.94));
-  display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .password-guidance {
@@ -46,16 +19,12 @@
   gap: 10px;
 }
 
-.password-checklist,
-.auth-security-list,
-.auth-highlight-list {
+.password-checklist {
   display: grid;
   gap: 12px;
 }
 
-.password-check,
-.auth-security-item,
-.auth-highlight {
+.password-check {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -72,10 +41,7 @@
   color: var(--text-main);
 }
 
-.password-check__dot,
-.auth-security-item__dot,
-.auth-highlight__dot,
-.auth-mini-preview__bullet {
+.password-check__dot {
   width: 10px;
   height: 10px;
   border-radius: 999px;
@@ -87,46 +53,4 @@
 .password-check.is-valid .password-check__dot {
   background: linear-gradient(135deg, var(--success-main), #90d8a9);
   box-shadow: 0 0 0 4px rgba(105, 192, 142, 0.12);
-}
-
-.auth-panel--aside {
-  justify-content: space-between;
-}
-
-.auth-mini-preview {
-  padding: 18px;
-  border-radius: 22px;
-  border: 1px solid var(--line-soft);
-  background:
-    linear-gradient(180deg, rgba(18, 18, 24, 0.92), rgba(24, 25, 34, 0.92));
-  display: grid;
-  gap: 14px;
-}
-
-.auth-mini-preview__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.auth-mini-preview__chip {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(139, 132, 255, 0.18);
-  color: var(--accent-main);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.auth-mini-preview__header strong {
-  color: var(--text-main);
-  font-size: 0.98rem;
-}
-
-.auth-mini-preview__item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--text-soft);
 }

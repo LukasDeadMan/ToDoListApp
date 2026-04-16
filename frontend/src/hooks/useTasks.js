@@ -13,22 +13,11 @@ function mergeTasks(remoteItems, localItems) {
     return remoteItems;
   }
 
-  const mergedItems = new Map();
+  const remoteIds = new Set(remoteItems.map((task) => task.id));
+  const localOnly = localItems.filter((task) => !remoteIds.has(task.id));
 
-  localItems.forEach((task) => {
-    mergedItems.set(task.id, task);
-  });
-
-  remoteItems.forEach((task) => {
-    if (!mergedItems.has(task.id)) {
-      mergedItems.set(task.id, task);
-    }
-  });
-
-  return Array.from(mergedItems.values()).sort((leftTask, rightTask) => {
-    const leftCreatedAt = leftTask.created_at || "";
-    const rightCreatedAt = rightTask.created_at || "";
-    return rightCreatedAt.localeCompare(leftCreatedAt);
+  return [...remoteItems, ...localOnly].sort((leftTask, rightTask) => {
+    return new Date(rightTask.created_at) - new Date(leftTask.created_at);
   });
 }
 

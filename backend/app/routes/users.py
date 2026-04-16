@@ -1,12 +1,14 @@
 from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 import re
 
 from ..extensions import db
 from ..models import User
 
 bp = Blueprint("users", __name__)
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 WEAK_PASSWORDS = {
     "12345678",
     "123456789",
@@ -171,6 +173,9 @@ def register():
     if not normalized_fields["email"]:
         return jsonify({"error": "Email nao pode ficar vazio."}), 400
 
+    if not _EMAIL_RE.match(normalized_fields["email"]):
+        return jsonify({"error": "Email invalido."}), 400
+
     password_error = get_password_error(data.get("password"))
     if password_error:
         return jsonify({"error": password_error}), 400
@@ -193,7 +198,11 @@ def register():
     user.set_password(data["password"])
 
     db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Email ou nickname ja estao em uso."}), 409
     login_user(user)
 
     return jsonify(user_to_dict(user)), 201
@@ -316,6 +325,8 @@ def update_user(user_id):
         email = normalize_text(data["email"], lowercase=True)
         if not email:
             return jsonify({"error": "Email nao pode ficar vazio."}), 400
+        if not _EMAIL_RE.match(email):
+            return jsonify({"error": "Email invalido."}), 400
         if email != current_user.email and User.query.filter_by(email=email).first():
             return jsonify({"error": "Email ja esta em uso."}), 409
         current_user.email = email
@@ -328,7 +339,11 @@ def update_user(user_id):
             return jsonify({"error": password_error}), 400
         current_user.set_password(data["password"])
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Email ou nickname ja estao em uso."}), 409
     return jsonify({"message": "Perfil atualizado.", "user": user_to_dict(current_user)})
 
 
