@@ -77,7 +77,7 @@ class TaskHelpersTestCase(unittest.TestCase):
                 "id": 7,
                 "title": "Estudar Flask",
                 "done": False,
-                "created_at": "2025-08-26T12:30:45",
+                "created_at": "2025-08-26T12:30:45+00:00",
                 "user_id": 3,
             },
         )

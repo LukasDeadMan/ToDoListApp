@@ -65,6 +65,32 @@ export default function TasksPage({
   });
   const filteredCountLabel = pluralizeTasks(filteredTasks.length);
   const hasActiveFilters = filter !== "all" || Boolean(deferredSearch);
+  const openFilteredTasks = filteredTasks.filter((task) => !task.done);
+  const doneFilteredTasks = filteredTasks.filter((task) => task.done);
+  const taskGroups =
+    filter === "all"
+      ? [
+          {
+            id: "open",
+            title: "Em aberto",
+            description: `${openFilteredTasks.length} item${openFilteredTasks.length === 1 ? "" : "s"}`,
+            items: openFilteredTasks,
+          },
+          {
+            id: "done",
+            title: "Concluidas",
+            description: `${doneFilteredTasks.length} item${doneFilteredTasks.length === 1 ? "" : "s"}`,
+            items: doneFilteredTasks,
+          },
+        ]
+      : [
+          {
+            id: filter,
+            title: filter === "done" ? "Concluidas" : "Em aberto",
+            description: filteredCountLabel,
+            items: filteredTasks,
+          },
+        ];
   const selectionTitle = currentTask
     ? currentTask.title
     : openTasks === 0
@@ -120,23 +146,16 @@ export default function TasksPage({
   }
 
   return (
-    <div className="dashboard">
-      <section className="workspace-header">
+    <div className="dashboard dashboard--tasks">
+      <section className="workspace-header workspace-header--tasks workspace-header--tasks-compact">
         <div className="workspace-header__copy">
           <p className="eyebrow">Painel</p>
           <h1 className="page-title">
             {user?.username ? `${user.username}, suas tarefas` : "Suas tarefas"}
           </h1>
-          <p className="page-copy">
-            Capture novas demandas, acompanhe o que ficou em aberto e ajuste o foco sem trocar de tela.
-          </p>
         </div>
 
-        <div className="workspace-header__actions">
-          <AppLink className="button" onNavigate={onNavigate} to={routePaths.newTask}>
-            Nova tarefa
-          </AppLink>
-
+        <div className="workspace-header__actions workspace-header__actions--tasks">
           <AppLink
             className="button button--secondary"
             onNavigate={onNavigate}
@@ -147,42 +166,43 @@ export default function TasksPage({
         </div>
       </section>
 
-      <div className="dashboard-layout">
-        <div className="dashboard-main">
-          <section className="surface surface--stack quick-capture">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Captura rapida</p>
-                <h2 className="section-title">
-                  {route.name === "taskNew"
-                    ? "Modo criacao aberto"
-                    : "Adicione um item sem perder a lista de vista"}
-                </h2>
-              </div>
-
-              {route.name === "taskNew" ? (
-                <button
-                  className="button button--ghost"
-                  onClick={() => onNavigate(routePaths.tasks)}
-                  type="button"
-                >
-                  Voltar para a lista
-                </button>
-              ) : null}
+      <div className="tasks-layout">
+        <section className="surface surface--stack tasks-hub">
+          <div className="tasks-hub__header">
+            <div>
+              <p className="eyebrow">Hoje</p>
+              <h2 className="section-title">Organize o que precisa acontecer.</h2>
             </div>
 
-            <form className="stack-form" onSubmit={handleCreateTask}>
-              <label className="field" htmlFor="create-task">
+            <div className="tasks-hub__stats">
+              <div className="tasks-hub__stat">
+                <span>Em aberto</span>
+                <strong>{openTasks}</strong>
+              </div>
+              <div className="tasks-hub__stat">
+                <span>Concluidas</span>
+                <strong>{completedTasks}</strong>
+              </div>
+              <div className="tasks-hub__stat">
+                <span>Progresso</span>
+                <strong>{completionRate}%</strong>
+              </div>
+            </div>
+          </div>
+
+          <section className="quick-capture quick-capture--inline">
+            <form className="stack-form stack-form--composer" onSubmit={handleCreateTask}>
+              <label className="field field--composer" htmlFor="create-task">
                 <span className="field__label">Titulo da tarefa</span>
                 <textarea
-                  className="field__control field__control--textarea"
+                  className="field__control field__control--textarea field__control--composer"
                   disabled={isCreateDisabled}
                   id="create-task"
                   name="create-task"
                   onChange={(event) => setCreateTitle(event.target.value)}
-                  placeholder="Ex.: revisar pendencias da semana"
+                  placeholder="Adicione uma tarefa e pressione criar"
                   ref={composerRef}
-                  rows="3"
+                  rows="2"
                   value={createTitle}
                 />
               </label>
@@ -191,7 +211,7 @@ export default function TasksPage({
                 <div className="inline-alert inline-alert--error">{createError}</div>
               ) : null}
 
-              <div className="action-row">
+              <div className="action-row action-row--composer">
                 <button className="button" disabled={isCreateDisabled} type="submit">
                   {isBusy
                     ? "Salvando..."
@@ -211,26 +231,34 @@ export default function TasksPage({
                 >
                   Limpar
                 </button>
+                {route.name === "taskNew" ? (
+                  <button
+                    className="button button--ghost"
+                    onClick={() => onNavigate(routePaths.tasks)}
+                    type="button"
+                  >
+                    Fechar criacao
+                  </button>
+                ) : null}
               </div>
             </form>
           </section>
 
-          <section className="surface surface--stack task-board">
-            <div className="task-board__top">
+          <section className="task-board task-board--flat">
+            <div className="task-board__top task-board__top--aligned">
               <div>
                 <p className="eyebrow">Lista principal</p>
                 <h2 className="section-title">Tudo que precisa da sua atencao</h2>
               </div>
 
-              <div className="task-board__count">
-                <strong>{filteredCountLabel}</strong>
-                <span>{hasActiveFilters ? "nesta visao" : "no painel"}</span>
-              </div>
+              <p className="task-board__summary">
+                {hasActiveFilters ? `${filteredCountLabel} nesta visao` : `${filteredCountLabel} no painel`}
+              </p>
             </div>
 
-            <div className="task-toolbar">
+            <div className="task-toolbar task-toolbar--tasks">
               <label className="field task-toolbar__search" htmlFor="task-search">
-                <span className="field__label">Buscar tarefa</span>
+                <span className="field__label">Buscar</span>
                 <input
                   className="field__control"
                   id="task-search"
@@ -274,65 +302,39 @@ export default function TasksPage({
                 </p>
               </div>
             ) : (
-              <div className="task-list">
-                {filteredTasks.map((task) => (
-                  <TaskCard
-                    isBusy={isBusy}
-                    isEditing={currentTask?.id === task.id}
-                    key={task.id}
-                    onDelete={handleDelete}
-                    onNavigate={onNavigate}
-                    onToggle={onToggleTask}
-                    task={task}
-                  />
-                ))}
+              <div className="task-groups">
+                {taskGroups.map((group) => {
+                  if (group.items.length === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <section className="task-group" key={group.id}>
+                      <header className="task-group__header">
+                        <div>
+                          <h3 className="task-group__title">{group.title}</h3>
+                          <p className="task-group__meta">{group.description}</p>
+                        </div>
+                      </header>
+
+                      <div className="task-list">
+                        {group.items.map((task) => (
+                          <TaskCard
+                            isBusy={isBusy}
+                            isEditing={currentTask?.id === task.id}
+                            key={task.id}
+                            onDelete={handleDelete}
+                            onNavigate={onNavigate}
+                            onToggle={onToggleTask}
+                            task={task}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
               </div>
             )}
-          </section>
-        </div>
-
-        <aside className="dashboard-side">
-          <section className="surface surface--stack insight-panel">
-            <div>
-              <p className="eyebrow">Visao geral</p>
-              <h2 className="section-title">Seu ritmo hoje</h2>
-            </div>
-
-            <div className="insight-grid">
-              <article className="insight-card">
-                <span className="insight-card__label">Total</span>
-                <strong>{pluralizeTasks(tasks.length)}</strong>
-              </article>
-
-              <article className="insight-card">
-                <span className="insight-card__label">Em aberto</span>
-                <strong>{openTasks}</strong>
-              </article>
-
-              <article className="insight-card">
-                <span className="insight-card__label">Concluidas</span>
-                <strong>{completedTasks}</strong>
-              </article>
-
-              <article className="insight-card">
-                <span className="insight-card__label">Progresso</span>
-                <strong>{completionRate}%</strong>
-              </article>
-            </div>
-
-            <p className="page-copy">
-              {openTasks > 0
-                ? `Voce ainda tem ${openTasks} tarefa${openTasks > 1 ? "s" : ""} aberta${openTasks > 1 ? "s" : ""}.`
-                : "Sem pendencias abertas no momento."}
-            </p>
-
-            <AppLink
-              className="button button--secondary"
-              onNavigate={onNavigate}
-              to={routePaths.profile}
-            >
-              Abrir perfil
-            </AppLink>
           </section>
 
           {route.name === "taskEdit" ? (
@@ -342,40 +344,8 @@ export default function TasksPage({
               onSave={onUpdateTask}
               task={currentTask}
             />
-          ) : (
-            <section className="surface surface--stack detail-panel">
-              <p className="eyebrow">Painel lateral</p>
-              <h2 className="section-title">{selectionTitle}</h2>
-              <p className="page-copy">
-                {currentTask
-                  ? "Edite esse item para revisar titulo e status sem perder o contexto da lista."
-                  : hasActiveFilters
-                    ? "Sua visao atual combina busca e filtro. Limpe os controles para voltar ao panorama completo."
-                    : "Abra um item da lista para revisar detalhes ou crie uma nova tarefa no bloco de captura."}
-              </p>
-
-              <div className="detail-panel__meta">
-                <div className="detail-chip">
-                  <span>Filtro</span>
-                  <strong>{filters.find((item) => item.value === filter)?.label}</strong>
-                </div>
-
-                <div className="detail-chip">
-                  <span>Busca</span>
-                  <strong>{search.trim() || "Sem busca"}</strong>
-                </div>
-              </div>
-
-              <AppLink
-                className="button button--secondary"
-                onNavigate={onNavigate}
-                to={routePaths.newTask}
-              >
-                Nova tarefa
-              </AppLink>
-            </section>
-          )}
-        </aside>
+          ) : null}
+        </section>
       </div>
     </div>
   );

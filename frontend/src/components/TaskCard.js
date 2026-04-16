@@ -12,7 +12,7 @@ export default function TaskCard({
 }) {
   return (
     <article className={`task-card ${task.done ? "is-done" : ""}`}>
-      <div className="task-card__header">
+      <div className="task-card__main">
         <button
           aria-label={
             task.done ? "Marcar tarefa como aberta" : "Marcar tarefa como concluida"
@@ -22,21 +22,15 @@ export default function TaskCard({
           onClick={() => onToggle(task)}
           type="button"
         >
-          {task.done ? "Feita" : "Aberta"}
+          <span className="status-toggle__dot" />
         </button>
 
-        <span className="task-card__timestamp">
-          {formatTaskDate(task.created_at)}
-        </span>
-      </div>
-
-      <div className="task-card__body">
-        <h3>{task.title}</h3>
-        <p>
-          {task.done
-            ? "Concluida e pronta para sair da lista."
-            : "Ainda em andamento. Ajuste, conclua ou continue depois."}
-        </p>
+        <div className="task-card__body">
+          <h3>{task.title}</h3>
+          <span className="task-card__timestamp">
+            {task.done ? "Concluida" : "Criada"} em {formatTaskDate(task.created_at)}
+          </span>
+        </div>
       </div>
 
       <div className="task-card__footer">

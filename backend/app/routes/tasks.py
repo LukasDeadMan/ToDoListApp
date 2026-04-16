@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
@@ -42,11 +44,15 @@ def task_to_dict(task):
     Portugues: Mantem as respostas de tarefa previsiveis para o frontend.
     """
 
+    created_at = task.created_at
+    if created_at and created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+
     return {
         "id": task.id,
         "title": task.title,
         "done": task.done,
-        "created_at": task.created_at.isoformat() if task.created_at else None,
+        "created_at": created_at.isoformat() if created_at else None,
         "user_id": task.user_id,
     }
 

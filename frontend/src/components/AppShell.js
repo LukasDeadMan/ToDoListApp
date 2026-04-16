@@ -8,11 +8,13 @@ const authenticatedLinks = [
 ];
 
 function isLinkActive(route, targetPath) {
-  if (targetPath === routePaths.tasks || targetPath === routePaths.newTask) {
+  if (targetPath === routePaths.tasks) {
+    return route.name === "tasks" || route.name === "taskEdit";
+  }
+
+  if (targetPath === routePaths.newTask) {
     return (
-      route.name === "tasks" ||
-      route.name === "taskNew" ||
-      route.name === "taskEdit"
+      route.name === "taskNew"
     );
   }
 

@@ -3,6 +3,8 @@
   .auth-layout,
   .landing-hero,
   .showcase-section,
+  .tasks-layout,
+  .tasks-workspace,
   .dashboard-layout,
   .content-grid,
   .content-grid--profile {
@@ -31,10 +33,12 @@
   }
 
   .workspace-header,
+  .tasks-hub__header,
   .panel-heading,
   .action-row,
   .auth-switch,
   .task-board__top,
+  .task-group__header,
   .site-header,
   .hero-preview__topline,
   .showcase-panel__header {
@@ -52,6 +56,7 @@
 
   .field-grid,
   .task-toolbar,
+  .task-toolbar--tasks,
   .dashboard .summary-strip,
   .insight-grid,
   .detail-panel__meta,
@@ -84,6 +89,7 @@
 @media (max-width: 560px) {
   .sidebar__footer,
   .workspace-header__actions,
+  .tasks-hub__stats,
   .filter-group,
   .site-header__actions,
   .landing-hero__actions,
@@ -99,7 +105,7 @@
   }
 
   .flash,
-  .task-card__header,
+  .task-card,
   .task-card__footer,
   .landing-trust {
     flex-direction: column;
