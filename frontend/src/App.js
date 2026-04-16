@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import "./App.css";
 import AppShell from "./components/AppShell";
 import FlashMessage from "./components/FlashMessage";
@@ -46,27 +46,30 @@ function App() {
     return () => window.clearTimeout(timeoutId);
   }, [flash]);
 
-  function navigate(nextPath, options = {}) {
-    const normalizedPath = normalizePath(nextPath);
+  const navigate = useCallback(
+    (nextPath, options = {}) => {
+      const normalizedPath = normalizePath(nextPath);
 
-    if (normalizedPath === route.normalizedPath) {
-      return;
-    }
+      if (normalizedPath === route.normalizedPath) {
+        return;
+      }
 
-    if (options.replace) {
-      window.history.replaceState({}, "", normalizedPath);
-    } else {
-      window.history.pushState({}, "", normalizedPath);
-    }
+      if (options.replace) {
+        window.history.replaceState({}, "", normalizedPath);
+      } else {
+        window.history.pushState({}, "", normalizedPath);
+      }
 
-    if (typeof window.scrollTo === "function") {
-      window.scrollTo(0, 0);
-    }
+      if (typeof window.scrollTo === "function") {
+        window.scrollTo(0, 0);
+      }
 
-    startTransition(() => {
-      setRoute(matchRoute(normalizedPath));
-    });
-  }
+      startTransition(() => {
+        setRoute(matchRoute(normalizedPath));
+      });
+    },
+    [route.normalizedPath]
+  );
 
   const {
     authState,
@@ -124,7 +127,7 @@ function App() {
     ) {
       navigate(routePaths.tasks, { replace: true });
     }
-  }, [authState.status, route.normalizedPath]);
+  }, [authState.status, navigate, route.normalizedPath]);
 
   function renderPage() {
     if (authState.status === "booting") {

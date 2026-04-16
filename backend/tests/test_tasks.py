@@ -32,7 +32,7 @@ class TasksApiTestCase(ApiTestCase):
             username="Lucas",
             nickname="lukas",
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         first_client.post("/api/v1/tasks", json={"title": "Tarefa Lucas"})
 
@@ -41,7 +41,7 @@ class TasksApiTestCase(ApiTestCase):
             username="Maria",
             nickname="maria",
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
         second_client.post("/api/v1/tasks", json={"title": "Tarefa Maria"})
 
@@ -121,12 +121,12 @@ class TasksApiTestCase(ApiTestCase):
             username="Lucas",
             nickname="lukas",
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         self.login_user_with(
             first_client,
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         task_id = first_client.post("/api/v1/tasks", json={"title": "Privada"}).get_json()["id"]
 
@@ -135,12 +135,12 @@ class TasksApiTestCase(ApiTestCase):
             username="Maria",
             nickname="maria",
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
         self.login_user_with(
             second_client,
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
 
         response = second_client.get(f"/api/v1/tasks/{task_id}")
@@ -157,7 +157,7 @@ class TasksApiTestCase(ApiTestCase):
             username="Lucas",
             nickname="lukas",
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         task_id = first_client.post("/api/v1/tasks", json={"title": "Privada"}).get_json()["id"]
         self.register_and_login(
@@ -165,7 +165,7 @@ class TasksApiTestCase(ApiTestCase):
             username="Maria",
             nickname="maria",
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
 
         response = second_client.delete(f"/api/v1/tasks/{task_id}")

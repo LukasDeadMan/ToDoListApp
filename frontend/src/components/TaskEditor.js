@@ -94,7 +94,7 @@ export default function TaskEditor({ isBusy, onCancel, onSave, task }) {
           />
           <span>
             {draft.done
-              ? "Marcar como concluida"
+              ? "Tarefa concluida"
               : "Manter como tarefa em aberto"}
           </span>
         </label>

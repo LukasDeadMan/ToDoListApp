@@ -107,16 +107,11 @@ export default function useAuth({ navigate, setFlash }) {
     setPendingAction("register");
 
     try {
-      await usersApi.register(payload);
-
-      const loginResponse = await usersApi.login({
-        email: payload.email.trim().toLowerCase(),
-        password: payload.password,
-      });
+      const user = await usersApi.register(payload);
 
       setAuthState({
         status: "authenticated",
-        user: loginResponse.user,
+        user,
       });
       pushFlash("success", "Conta criada e sessao iniciada.");
       redirect(routePaths.tasks, { replace: true });

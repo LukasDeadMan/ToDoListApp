@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { validatePasswordStrength } from "../lib/auth";
 
 export default function ProfilePage({
   isBusy,
@@ -50,6 +51,14 @@ export default function ProfilePage({
     if (form.password && form.password !== form.confirmPassword) {
       setError("As senhas precisam ser iguais.");
       return;
+    }
+
+    if (form.password) {
+      const passwordError = validatePasswordStrength(form.password);
+      if (passwordError) {
+        setError(passwordError);
+        return;
+      }
     }
 
     const payload = {};
@@ -210,6 +219,11 @@ export default function ProfilePage({
                 />
               </label>
             </div>
+
+            <p className="page-copy">
+              Se for trocar a senha, use pelo menos 8 caracteres com letra maiuscula,
+              minuscula e numero.
+            </p>
 
             {error ? <div className="inline-alert inline-alert--error">{error}</div> : null}
 

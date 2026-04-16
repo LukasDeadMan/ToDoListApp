@@ -37,6 +37,7 @@ export default function TasksPage({
     route.name === "taskEdit"
       ? tasks.find((task) => task.id === currentTaskId) || null
       : null;
+  const isCreateDisabled = isBusy || isLoading;
 
   useEffect(() => {
     if (route.name !== "taskNew" || !composerRef.current) {
@@ -62,6 +63,13 @@ export default function TasksPage({
 
     return matchesFilter && matchesSearch;
   });
+  const filteredCountLabel = pluralizeTasks(filteredTasks.length);
+  const hasActiveFilters = filter !== "all" || Boolean(deferredSearch);
+  const selectionTitle = currentTask
+    ? currentTask.title
+    : openTasks === 0
+      ? "Tudo em dia por aqui."
+      : "Selecione uma tarefa para revisar.";
 
   async function handleCreateTask(event) {
     event.preventDefault();
@@ -120,7 +128,7 @@ export default function TasksPage({
             {user?.username ? `${user.username}, suas tarefas` : "Suas tarefas"}
           </h1>
           <p className="page-copy">
-            {openTasks} em aberto, {completedTasks} concluidas.
+            Capture novas demandas, acompanhe o que ficou em aberto e ajuste o foco sem trocar de tela.
           </p>
         </div>
 
@@ -139,181 +147,235 @@ export default function TasksPage({
         </div>
       </section>
 
-      <section className="summary-strip">
-        <article className="stat-card">
-          <span className="stat-card__label">Total</span>
-          <strong>{pluralizeTasks(tasks.length)}</strong>
-        </article>
+      <div className="dashboard-layout">
+        <div className="dashboard-main">
+          <section className="surface surface--stack quick-capture">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">Captura rapida</p>
+                <h2 className="section-title">
+                  {route.name === "taskNew"
+                    ? "Modo criacao aberto"
+                    : "Adicione um item sem perder a lista de vista"}
+                </h2>
+              </div>
 
-        <article className="stat-card">
-          <span className="stat-card__label">Em aberto</span>
-          <strong>{openTasks}</strong>
-        </article>
-
-        <article className="stat-card">
-          <span className="stat-card__label">Concluidas</span>
-          <strong>{completedTasks}</strong>
-        </article>
-
-        <article className="stat-card">
-          <span className="stat-card__label">Progresso</span>
-          <strong>{completionRate}%</strong>
-        </article>
-      </section>
-
-      <div className="content-grid">
-        <section className="surface surface--stack">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">Nova tarefa</p>
-              <h2 className="section-title">
-                {route.name === "taskNew"
-                  ? "Criacao em foco"
-                  : "Adicione um item sem sair da lista"}
-              </h2>
-            </div>
-
-            {route.name === "taskNew" ? (
-              <button
-                className="button button--ghost"
-                onClick={() => onNavigate(routePaths.tasks)}
-                type="button"
-              >
-                Fechar modo criacao
-              </button>
-            ) : null}
-          </div>
-
-          <form className="stack-form" onSubmit={handleCreateTask}>
-            <label className="field" htmlFor="create-task">
-              <span className="field__label">Titulo da tarefa</span>
-              <textarea
-                className="field__control field__control--textarea"
-                id="create-task"
-                name="create-task"
-                onChange={(event) => setCreateTitle(event.target.value)}
-                placeholder="Ex.: revisar pendencias da semana"
-                ref={composerRef}
-                rows="3"
-                value={createTitle}
-              />
-            </label>
-
-            {createError ? (
-              <div className="inline-alert inline-alert--error">{createError}</div>
-            ) : null}
-
-            <div className="action-row">
-              <button className="button" disabled={isBusy} type="submit">
-                {isBusy ? "Salvando..." : "Criar tarefa"}
-              </button>
-
-              <button
-                className="button button--ghost"
-                disabled={isBusy || !createTitle}
-                onClick={() => {
-                  setCreateTitle("");
-                  setCreateError("");
-                }}
-                type="button"
-              >
-                Limpar
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section className="surface surface--stack">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">Lista</p>
-              <h2 className="section-title">Seus itens</h2>
-            </div>
-
-            <div className="filter-group">
-              {filters.map((filterOption) => (
+              {route.name === "taskNew" ? (
                 <button
-                  className={`filter-chip ${
-                    filter === filterOption.value ? "is-active" : ""
-                  }`}
-                  key={filterOption.value}
-                  onClick={() => setFilter(filterOption.value)}
+                  className="button button--ghost"
+                  onClick={() => onNavigate(routePaths.tasks)}
                   type="button"
                 >
-                  {filterOption.label}
+                  Voltar para a lista
                 </button>
-              ))}
+              ) : null}
             </div>
-          </div>
 
-          <label className="field" htmlFor="task-search">
-            <span className="field__label">Buscar tarefa</span>
-            <input
-              className="field__control"
-              id="task-search"
-              onChange={handleSearchChange}
-              placeholder="Procure por um titulo"
-              type="search"
-              value={search}
-            />
-          </label>
-
-          {listError ? (
-            <div className="inline-alert inline-alert--error">{listError}</div>
-          ) : null}
-
-          {isLoading ? (
-            <div className="empty-state">
-              <div className="loader" aria-hidden="true" />
-              <p>Carregando tarefas...</p>
-            </div>
-          ) : filteredTasks.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-state__title">Nenhuma tarefa nesta visao.</p>
-              <p className="page-copy">
-                Ajuste o filtro, limpe a busca ou crie um novo item para preencher o painel.
-              </p>
-            </div>
-          ) : (
-            <div className="task-list">
-              {filteredTasks.map((task) => (
-                <TaskCard
-                  isBusy={isBusy}
-                  isEditing={currentTask?.id === task.id}
-                  key={task.id}
-                  onDelete={handleDelete}
-                  onNavigate={onNavigate}
-                  onToggle={onToggleTask}
-                  task={task}
+            <form className="stack-form" onSubmit={handleCreateTask}>
+              <label className="field" htmlFor="create-task">
+                <span className="field__label">Titulo da tarefa</span>
+                <textarea
+                  className="field__control field__control--textarea"
+                  disabled={isCreateDisabled}
+                  id="create-task"
+                  name="create-task"
+                  onChange={(event) => setCreateTitle(event.target.value)}
+                  placeholder="Ex.: revisar pendencias da semana"
+                  ref={composerRef}
+                  rows="3"
+                  value={createTitle}
                 />
-              ))}
-            </div>
-          )}
-        </section>
+              </label>
 
-        {route.name === "taskEdit" ? (
-          <TaskEditor
-            isBusy={isBusy}
-            onCancel={() => onNavigate(routePaths.tasks)}
-            onSave={onUpdateTask}
-            task={currentTask}
-          />
-        ) : (
-          <section className="surface surface--stack">
-            <p className="eyebrow">Detalhes</p>
-            <h2 className="section-title">Selecione uma tarefa para editar.</h2>
+              {createError ? (
+                <div className="inline-alert inline-alert--error">{createError}</div>
+              ) : null}
+
+              <div className="action-row">
+                <button className="button" disabled={isCreateDisabled} type="submit">
+                  {isBusy
+                    ? "Salvando..."
+                    : isLoading
+                      ? "Carregando..."
+                      : "Criar tarefa"}
+                </button>
+
+                <button
+                  className="button button--ghost"
+                  disabled={isCreateDisabled || !createTitle}
+                  onClick={() => {
+                    setCreateTitle("");
+                    setCreateError("");
+                  }}
+                  type="button"
+                >
+                  Limpar
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className="surface surface--stack task-board">
+            <div className="task-board__top">
+              <div>
+                <p className="eyebrow">Lista principal</p>
+                <h2 className="section-title">Tudo que precisa da sua atencao</h2>
+              </div>
+
+              <div className="task-board__count">
+                <strong>{filteredCountLabel}</strong>
+                <span>{hasActiveFilters ? "nesta visao" : "no painel"}</span>
+              </div>
+            </div>
+
+            <div className="task-toolbar">
+              <label className="field task-toolbar__search" htmlFor="task-search">
+                <span className="field__label">Buscar tarefa</span>
+                <input
+                  className="field__control"
+                  id="task-search"
+                  onChange={handleSearchChange}
+                  placeholder="Procure por um titulo"
+                  type="search"
+                  value={search}
+                />
+              </label>
+
+              <div className="filter-group">
+                {filters.map((filterOption) => (
+                  <button
+                    className={`filter-chip ${
+                      filter === filterOption.value ? "is-active" : ""
+                    }`}
+                    key={filterOption.value}
+                    onClick={() => setFilter(filterOption.value)}
+                    type="button"
+                  >
+                    {filterOption.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {listError ? (
+              <div className="inline-alert inline-alert--error">{listError}</div>
+            ) : null}
+
+            {isLoading ? (
+              <div className="empty-state">
+                <div className="loader" aria-hidden="true" />
+                <p>Carregando tarefas...</p>
+              </div>
+            ) : filteredTasks.length === 0 ? (
+              <div className="empty-state">
+                <p className="empty-state__title">Nenhuma tarefa nesta visao.</p>
+                <p className="page-copy">
+                  Ajuste o filtro, limpe a busca ou crie um novo item para preencher o painel.
+                </p>
+              </div>
+            ) : (
+              <div className="task-list">
+                {filteredTasks.map((task) => (
+                  <TaskCard
+                    isBusy={isBusy}
+                    isEditing={currentTask?.id === task.id}
+                    key={task.id}
+                    onDelete={handleDelete}
+                    onNavigate={onNavigate}
+                    onToggle={onToggleTask}
+                    task={task}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <aside className="dashboard-side">
+          <section className="surface surface--stack insight-panel">
+            <div>
+              <p className="eyebrow">Visao geral</p>
+              <h2 className="section-title">Seu ritmo hoje</h2>
+            </div>
+
+            <div className="insight-grid">
+              <article className="insight-card">
+                <span className="insight-card__label">Total</span>
+                <strong>{pluralizeTasks(tasks.length)}</strong>
+              </article>
+
+              <article className="insight-card">
+                <span className="insight-card__label">Em aberto</span>
+                <strong>{openTasks}</strong>
+              </article>
+
+              <article className="insight-card">
+                <span className="insight-card__label">Concluidas</span>
+                <strong>{completedTasks}</strong>
+              </article>
+
+              <article className="insight-card">
+                <span className="insight-card__label">Progresso</span>
+                <strong>{completionRate}%</strong>
+              </article>
+            </div>
+
             <p className="page-copy">
-              Abra um item da lista para revisar titulo e status sem perder o contexto do painel.
+              {openTasks > 0
+                ? `Voce ainda tem ${openTasks} tarefa${openTasks > 1 ? "s" : ""} aberta${openTasks > 1 ? "s" : ""}.`
+                : "Sem pendencias abertas no momento."}
             </p>
+
             <AppLink
               className="button button--secondary"
               onNavigate={onNavigate}
-              to={routePaths.newTask}
+              to={routePaths.profile}
             >
-              Nova tarefa
+              Abrir perfil
             </AppLink>
           </section>
-        )}
+
+          {route.name === "taskEdit" ? (
+            <TaskEditor
+              isBusy={isBusy}
+              onCancel={() => onNavigate(routePaths.tasks)}
+              onSave={onUpdateTask}
+              task={currentTask}
+            />
+          ) : (
+            <section className="surface surface--stack detail-panel">
+              <p className="eyebrow">Painel lateral</p>
+              <h2 className="section-title">{selectionTitle}</h2>
+              <p className="page-copy">
+                {currentTask
+                  ? "Edite esse item para revisar titulo e status sem perder o contexto da lista."
+                  : hasActiveFilters
+                    ? "Sua visao atual combina busca e filtro. Limpe os controles para voltar ao panorama completo."
+                    : "Abra um item da lista para revisar detalhes ou crie uma nova tarefa no bloco de captura."}
+              </p>
+
+              <div className="detail-panel__meta">
+                <div className="detail-chip">
+                  <span>Filtro</span>
+                  <strong>{filters.find((item) => item.value === filter)?.label}</strong>
+                </div>
+
+                <div className="detail-chip">
+                  <span>Busca</span>
+                  <strong>{search.trim() || "Sem busca"}</strong>
+                </div>
+              </div>
+
+              <AppLink
+                className="button button--secondary"
+                onNavigate={onNavigate}
+                to={routePaths.newTask}
+              >
+                Nova tarefa
+              </AppLink>
+            </section>
+          )}
+        </aside>
       </div>
     </div>
   );

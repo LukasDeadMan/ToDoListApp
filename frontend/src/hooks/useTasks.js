@@ -8,6 +8,30 @@ const initialTasksState = {
   loading: false,
 };
 
+function mergeTasks(remoteItems, localItems) {
+  if (localItems.length === 0) {
+    return remoteItems;
+  }
+
+  const mergedItems = new Map();
+
+  localItems.forEach((task) => {
+    mergedItems.set(task.id, task);
+  });
+
+  remoteItems.forEach((task) => {
+    if (!mergedItems.has(task.id)) {
+      mergedItems.set(task.id, task);
+    }
+  });
+
+  return Array.from(mergedItems.values()).sort((leftTask, rightTask) => {
+    const leftCreatedAt = leftTask.created_at || "";
+    const rightCreatedAt = rightTask.created_at || "";
+    return rightCreatedAt.localeCompare(leftCreatedAt);
+  });
+}
+
 export default function useTasks({
   authState,
   navigate,
@@ -62,10 +86,13 @@ export default function useTasks({
           return;
         }
 
-        setTasksState({
-          items: Array.isArray(items) ? items : [],
+        setTasksState((currentState) => ({
+          items: mergeTasks(
+            Array.isArray(items) ? items : [],
+            currentState.items
+          ),
           loading: false,
-        });
+        }));
       } catch (error) {
         if (ignore) {
           return;

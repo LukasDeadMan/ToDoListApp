@@ -1,5 +1,6 @@
 import os
 import secrets
+from urllib.parse import urlparse
 
 from flask import Flask, jsonify, request
 from flask_login import current_user
@@ -18,6 +19,38 @@ def _env_flag(name, default=False):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _is_development_mode():
+    """Detect whether the app is running in a local development mode."""
+
+    flask_env = os.environ.get("FLASK_ENV", "").strip().lower()
+    if flask_env == "development":
+        return True
+
+    return _env_flag("FLASK_DEBUG")
+
+
+def _split_origins(value):
+    """Parse a comma-separated list of allowed frontend origins."""
+
+    if not value:
+        return []
+
+    return [item.strip().rstrip("/") for item in value.split(",") if item.strip()]
+
+
+def _normalize_origin(value):
+    """Normalize Origin or Referer values into scheme://host[:port]."""
+
+    if not value:
+        return ""
+
+    parsed = urlparse(value)
+    if not parsed.scheme or not parsed.netloc:
+        return value.rstrip("/")
+
+    return f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+
+
 def create_app(test_config=None):
     """Create and configure the Flask application.
 
@@ -28,6 +61,19 @@ def create_app(test_config=None):
     """
 
     app = Flask(__name__, instance_relative_config=True)
+    configured_frontend_origins = _split_origins(
+        os.environ.get("FRONTEND_ORIGINS")
+    ) or [_normalize_origin(os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000"))]
+    cross_site_cookies = _env_flag("SESSION_COOKIE_CROSS_SITE")
+    session_cookie_samesite = os.environ.get("SESSION_COOKIE_SAMESITE") or (
+        "None" if cross_site_cookies else "Lax"
+    )
+    session_cookie_secure = _env_flag(
+        "SESSION_COOKIE_SECURE", default=cross_site_cookies
+    )
+    remember_cookie_secure = _env_flag(
+        "REMEMBER_COOKIE_SECURE", default=session_cookie_secure
+    )
 
     # English: Default local configuration.
     # Portugues: Configuracao padrao para ambiente local.
@@ -38,12 +84,14 @@ def create_app(test_config=None):
             f"sqlite:///{os.path.join(app.instance_path, 'app.db')}",
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        FRONTEND_ORIGIN=os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000"),
+        FRONTEND_ORIGIN=configured_frontend_origins[0],
+        FRONTEND_ORIGINS=configured_frontend_origins,
         SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SAMESITE=os.environ.get("SESSION_COOKIE_SAMESITE", "Lax"),
-        SESSION_COOKIE_SECURE=_env_flag("SESSION_COOKIE_SECURE"),
+        SESSION_COOKIE_SAMESITE=session_cookie_samesite,
+        SESSION_COOKIE_SECURE=session_cookie_secure,
         REMEMBER_COOKIE_HTTPONLY=True,
-        REMEMBER_COOKIE_SECURE=_env_flag("REMEMBER_COOKIE_SECURE"),
+        REMEMBER_COOKIE_SECURE=remember_cookie_secure,
+        SESSION_COOKIE_CROSS_SITE=cross_site_cookies,
     )
 
     if test_config is None:
@@ -58,10 +106,25 @@ def create_app(test_config=None):
     if not app.config.get("SECRET_KEY"):
         if app.config.get("TESTING"):
             app.config["SECRET_KEY"] = "test-secret-key"
-        else:
+        elif _is_development_mode():
             app.config["SECRET_KEY"] = secrets.token_hex(32)
             app.logger.warning(
                 "SECRET_KEY not configured; using an ephemeral value for this process."
+            )
+        else:
+            raise RuntimeError(
+                "SECRET_KEY environment variable is required outside development and tests."
+            )
+
+    if app.config.get("SESSION_COOKIE_CROSS_SITE"):
+        if str(app.config["SESSION_COOKIE_SAMESITE"]).lower() != "none":
+            app.logger.warning(
+                "Cross-site session cookies require SESSION_COOKIE_SAMESITE=None."
+            )
+
+        if not app.config["SESSION_COOKIE_SECURE"]:
+            app.logger.warning(
+                "Cross-site session cookies should enable SESSION_COOKIE_SECURE=True."
             )
 
     # English: SQLite is stored inside the instance folder.
@@ -76,8 +139,38 @@ def create_app(test_config=None):
     cors.init_app(
         app,
         supports_credentials=True,
-        resources={r"/api/*": {"origins": app.config["FRONTEND_ORIGIN"]}},
+        resources={r"/api/*": {"origins": app.config["FRONTEND_ORIGINS"]}},
     )
+
+    @app.before_request
+    def protect_session_mutations():
+        """Reject cross-site state changes for session-authenticated API calls."""
+
+        if not request.path.startswith("/api/"):
+            return None
+
+        if request.method in {"GET", "HEAD", "OPTIONS"}:
+            return None
+
+        allowed_origins = {
+            _normalize_origin(origin)
+            for origin in app.config.get("FRONTEND_ORIGINS", [])
+            if origin
+        }
+        allowed_origins.add(_normalize_origin(request.host_url))
+
+        origin = _normalize_origin(request.headers.get("Origin"))
+        if origin:
+            if origin in allowed_origins:
+                return None
+
+            return jsonify({"error": "cross-site request blocked"}), 403
+
+        referer = _normalize_origin(request.headers.get("Referer"))
+        if referer in allowed_origins:
+            return None
+
+        return jsonify({"error": "cross-site request blocked"}), 403
 
     # English: Import models before migrations so SQLAlchemy metadata is ready.
     # Portugues: Importa os models antes das migracoes para preparar o metadata.

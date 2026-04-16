@@ -2,8 +2,10 @@
   .workspace-shell,
   .auth-layout,
   .auth-stage,
+  .auth-form-layout,
   .landing-hero,
   .showcase-section,
+  .dashboard-layout,
   .content-grid,
   .content-grid--profile {
     grid-template-columns: 1fr;
@@ -16,6 +18,8 @@
   }
 
   .dashboard .summary-strip,
+  .insight-grid,
+  .detail-panel__meta,
   .summary-grid,
   .proof-strip,
   .story-grid {
@@ -32,6 +36,7 @@
   .panel-heading,
   .action-row,
   .auth-switch,
+  .task-board__top,
   .site-header,
   .hero-preview__topline,
   .showcase-panel__header {
@@ -48,7 +53,10 @@
   }
 
   .field-grid,
+  .task-toolbar,
   .dashboard .summary-strip,
+  .insight-grid,
+  .detail-panel__meta,
   .summary-grid,
   .proof-strip,
   .story-grid,
@@ -91,7 +99,8 @@
   .flash,
   .task-card__header,
   .task-card__footer,
-  .landing-trust {
+  .landing-trust,
+  .auth-mini-preview__header {
     flex-direction: column;
     align-items: flex-start;
   }

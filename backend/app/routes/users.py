@@ -1,11 +1,20 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import or_
+import re
 
 from ..extensions import db
 from ..models import User
 
 bp = Blueprint("users", __name__)
+WEAK_PASSWORDS = {
+    "12345678",
+    "123456789",
+    "1234567890",
+    "password",
+    "password123",
+    "qwerty123",
+}
 
 
 def get_json():
@@ -35,6 +44,31 @@ def is_blank(value):
     """Check whether a value should be considered empty input."""
 
     return not isinstance(value, str) or not value.strip()
+
+
+def get_password_error(password):
+    """Return a validation error for weak passwords, or None when valid."""
+
+    if not isinstance(password, str):
+        return "password is required"
+
+    normalized = password.strip()
+    if len(normalized) < 8:
+        return "password must have at least 8 characters"
+
+    if normalized.lower() in WEAK_PASSWORDS:
+        return "choose a less predictable password"
+
+    if re.search(r"[a-z]", normalized) is None:
+        return "password must include a lowercase letter"
+
+    if re.search(r"[A-Z]", normalized) is None:
+        return "password must include an uppercase letter"
+
+    if re.search(r"\d", normalized) is None:
+        return "password must include a number"
+
+    return None
 
 
 def user_to_dict(user):
@@ -71,6 +105,10 @@ def register():
     if missing_fields:
         return jsonify({"error": f"missing fields: {', '.join(missing_fields)}"}), 400
 
+    password_error = get_password_error(data.get("password"))
+    if password_error:
+        return jsonify({"error": password_error}), 400
+
     existing_user = User.query.filter(
         or_(
             User.email == normalized_fields["email"],
@@ -90,6 +128,7 @@ def register():
 
     db.session.add(user)
     db.session.commit()
+    login_user(user)
 
     return jsonify(user_to_dict(user)), 201
 
@@ -200,6 +239,9 @@ def update_user(user_id):
     if "password" in data:
         if is_blank(data["password"]):
             return jsonify({"error": "password cannot be empty"}), 400
+        password_error = get_password_error(data["password"])
+        if password_error:
+            return jsonify({"error": password_error}), 400
         current_user.set_password(data["password"])
 
     db.session.commit()

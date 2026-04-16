@@ -180,15 +180,6 @@ describe("App smoke flows", () => {
       nickname: "teste-qa",
       email: "teste@example.com",
     });
-    usersApi.login.mockResolvedValue({
-      message: "login successful",
-      user: {
-        id: 18,
-        username: "Teste QA",
-        nickname: "teste-qa",
-        email: "teste@example.com",
-      },
-    });
     tasksApi.list.mockResolvedValue([]);
 
     renderAt("/register");
@@ -215,16 +206,65 @@ describe("App smoke flows", () => {
       });
     });
 
-    expect(usersApi.login).toHaveBeenCalledWith({
-      email: "teste@example.com",
-      password: "Teste123!",
-    });
+    expect(usersApi.login).not.toHaveBeenCalled();
     expect(await screen.findByText(/conta criada e sessao iniciada/i)).toBeInTheDocument();
     expect(
       await screen.findByRole("heading", {
         name: /teste qa, suas tarefas/i,
       })
     ).toBeInTheDocument();
+  });
+
+  test("blocks weak passwords before submitting the register form", async () => {
+    mockAnonymousSession();
+
+    renderAt("/register");
+
+    await screen.findByRole("heading", {
+      name: /abra seu workspace em poucos segundos/i,
+    });
+
+    await userEvent.type(screen.getByLabelText(/^nome$/i), "Teste QA");
+    await userEvent.type(screen.getByLabelText(/^nickname$/i), "teste-qa");
+    await userEvent.type(screen.getByLabelText(/^email$/i), "teste@example.com");
+    await userEvent.type(screen.getByLabelText(/^senha$/i), "12345678");
+    await userEvent.type(screen.getByLabelText(/^confirmacao$/i), "12345678");
+    await userEvent.click(screen.getByRole("button", { name: /criar conta/i }));
+
+    expect(
+      await screen.findByText(/escolha uma senha menos previsivel/i)
+    ).toBeInTheDocument();
+    expect(usersApi.register).not.toHaveBeenCalled();
+  });
+
+  test("keeps create disabled while the first task load is in progress", async () => {
+    usersApi.me.mockResolvedValue(authenticatedUser);
+    let resolveTasks;
+    tasksApi.list.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveTasks = resolve;
+        })
+    );
+
+    renderAt("/tasks/new");
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /lucas, suas tarefas/i,
+      })
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/titulo da tarefa/i)).toBeDisabled();
+      expect(screen.getByRole("button", { name: /carregando/i })).toBeDisabled();
+    });
+
+    resolveTasks([]);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /criar tarefa/i })).toBeEnabled();
+    });
   });
 
   test("logs out an authenticated user and returns to the home page", async () => {

@@ -10,14 +10,16 @@ class ApiTestCase(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         database_path = Path(self.temp_dir.name) / "test.db"
+        self.frontend_origin = "http://localhost:3000"
 
         self.app = create_app(
             {
                 "TESTING": True,
                 "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path}",
+                "FRONTEND_ORIGINS": [self.frontend_origin],
             }
         )
-        self.client = self.app.test_client()
+        self.client = self.make_client()
 
         with self.app.app_context():
             db.create_all()
@@ -35,7 +37,7 @@ class ApiTestCase(unittest.TestCase):
             username="  Lucas  ",
             nickname="  lukas  ",
             email="  LUCAS@example.com  ",
-            password="123456",
+            password="Teste123A",
         )
 
     def register_user_with(self, client, *, username, nickname, email, password):
@@ -53,7 +55,7 @@ class ApiTestCase(unittest.TestCase):
         return self.login_user_with(
             self.client,
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
 
     def login_user_with(self, client, *, email=None, nickname=None, password):
@@ -69,7 +71,9 @@ class ApiTestCase(unittest.TestCase):
         return self.client.post("/api/v1/tasks", json={"title": title})
 
     def make_client(self):
-        return self.app.test_client()
+        client = self.app.test_client()
+        client.environ_base["HTTP_ORIGIN"] = self.frontend_origin
+        return client
 
     def register_and_login(self, client, *, username, nickname, email, password):
         register_response = self.register_user_with(

@@ -31,14 +31,14 @@ class UsersApiTestCase(ApiTestCase):
             username="Lucas",
             nickname="lukas",
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         self.register_and_login(
             second_client,
             username="Maria",
             nickname="maria",
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
 
         response = second_client.get("/api/v1/users/1")
@@ -64,14 +64,14 @@ class UsersApiTestCase(ApiTestCase):
             username="Lucas",
             nickname="lukas",
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         self.register_and_login(
             second_client,
             username="Maria",
             nickname="maria",
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
 
         response = second_client.put("/api/v1/users/2", json={"nickname": "  lukas  "})
@@ -88,14 +88,14 @@ class UsersApiTestCase(ApiTestCase):
             username="Lucas",
             nickname="lukas",
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         self.register_and_login(
             second_client,
             username="Maria",
             nickname="maria",
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
 
         response = second_client.put("/api/v1/users/2", json={"email": " LUCAS@example.com "})
@@ -113,7 +113,7 @@ class UsersApiTestCase(ApiTestCase):
                 "username": "  Lucas Silva  ",
                 "nickname": "  lks  ",
                 "email": "  LKS@example.com  ",
-                "password": "nova-senha",
+                "password": "NovaSenha1",
             },
         )
 
@@ -132,9 +132,24 @@ class UsersApiTestCase(ApiTestCase):
         login_response = self.login_user_with(
             self.client,
             email="lks@example.com",
-            password="nova-senha",
+            password="NovaSenha1",
         )
         self.assertEqual(login_response.status_code, 200)
+
+    def test_update_user_rejects_weak_new_password(self):
+        self.register_user()
+        self.login_user()
+
+        response = self.client.put(
+            "/api/v1/users/1",
+            json={"password": "12345678"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json(),
+            {"error": "choose a less predictable password"},
+        )
 
     def test_delete_user_forbids_access_to_another_user(self):
         first_client = self.client
@@ -145,14 +160,14 @@ class UsersApiTestCase(ApiTestCase):
             username="Lucas",
             nickname="lukas",
             email="lucas@example.com",
-            password="123456",
+            password="Teste123A",
         )
         self.register_and_login(
             second_client,
             username="Maria",
             nickname="maria",
             email="maria@example.com",
-            password="654321",
+            password="Maria123A",
         )
 
         response = second_client.delete("/api/v1/users/1")
