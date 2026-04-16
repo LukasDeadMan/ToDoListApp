@@ -1,59 +1,59 @@
 # ToDo List App
-[Português](#portugues) | [English](#english)
+[Portugues](#portugues) | [English](#english)
 
 <a id="portugues"></a>
-## Português
+## Portugues
 
 ## Objetivo
 
-Criar uma aplicação web fullstack usando **React no frontend** e **Flask no backend**, com autenticação de usuários, CRUD de tarefas e estrutura pronta para deploy.
+Construir uma aplicacao web full stack com **React no frontend** e **Flask no backend**, com autenticacao de usuarios, CRUD de tarefas e base pronta para evolucao local e futura publicacao.
 
 ---
 
-## Stack Tecnológica
+## Stack Tecnologica
 
-- **Frontend:** React (JavaScript) + Fetch API + CSS customizado
+- **Frontend:** React (JavaScript) + Fetch API + CSS proprio
 - **Backend:** Python (Flask + Flask-Login + Flask-SQLAlchemy + Flask-Migrate + Flask-CORS)
 - **Banco de dados:** SQLite
-- **Ambiente:** Docker (container para frontend e backend via Docker Compose)
-- **Autenticação:** Sessão com cookie HTTP-only
-- **Testes:** Jest + Testing Library no frontend, Pytest no backend
+- **Ambiente:** Docker e Docker Compose
+- **Autenticacao:** sessao com cookie HTTP-only
+- **Testes:** Jest + Testing Library + Playwright no frontend, Pytest no backend
 
-### Observação sobre a stack
+### Observacao sobre a stack
 
-O planejamento inicial mencionava **Axios**, **Bootstrap** e **JWT**, mas a implementação atual seguiu outro caminho:
+O planejamento inicial mencionava **Axios**, **Bootstrap** e **JWT**, mas a implementacao atual seguiu outro caminho:
 
-- `Axios` foi substituído por `fetch`
-- `Bootstrap` foi substituído por CSS próprio
-- `JWT` foi substituído por autenticação baseada em sessão com `Flask-Login`
+- `Axios` foi substituido por `fetch`
+- `Bootstrap` foi substituido por CSS proprio
+- `JWT` foi substituido por autenticacao baseada em sessao com `Flask-Login`
 
-Essas mudanças foram feitas para simplificar a aplicação e combinar melhor com o fluxo web atual do projeto.
+Essa mudanca deixou o projeto mais simples e mais coerente com o fluxo web atual da aplicacao.
 
 ---
 
 ## Como rodar localmente com Docker
 
-1. **Pré-requisitos:**  
-   Docker Desktop (Windows/Mac) ou Docker Engine + Docker Compose (Linux)
+1. **Pre-requisitos**
+   Docker Desktop no Windows/Mac, ou Docker Engine + Docker Compose no Linux
 
-2. **Clone o repositório:**
+2. **Clone o repositorio**
 
-   ```bash
-   git clone https://github.com/LukasDeadMan/ToDoListApp.git
-   cd ToDoApp
-   ```
+```bash
+git clone https://github.com/LukasDeadMan/ToDoListApp.git
+cd ToDoApp
+```
 
-3. **Build e execute os containers:**
+3. **Suba os containers**
 
-   ```bash
-   docker compose up --build
-   ```
+```bash
+docker compose up --build
+```
 
-4. **Serviços disponíveis:**
+4. **Servicos disponiveis**
 
-   - Frontend React: <http://localhost:3000>
-   - Backend Flask: <http://localhost:5000>
-   - Healthcheck backend: <http://localhost:5000/status>
+- Frontend React: <http://localhost:3000>
+- Backend Flask: <http://localhost:5000>
+- Healthcheck backend: <http://localhost:5000/status>
 
 ---
 
@@ -64,27 +64,35 @@ ToDoApp/
 |-- backend/
 |   |-- app/
 |   |   |-- routes/
-|   |   |   |-- users.py
-|   |   |   `-- tasks.py
+|   |   |   |-- tasks.py
+|   |   |   `-- users.py
 |   |   |-- __init__.py
 |   |   |-- extensions.py
-|   |   `-- models.py
+|   |   |-- models.py
+|   |   `-- security.py
 |   |-- migrations/
 |   |-- tests/
 |   |-- Dockerfile
+|   |-- pytest.ini
 |   |-- requirements.txt
 |   `-- run.py
 |-- frontend/
+|   |-- e2e/
 |   |-- public/
 |   |-- src/
 |   |   |-- components/
+|   |   |-- hooks/
 |   |   |-- lib/
 |   |   |-- pages/
+|   |   |-- services/
+|   |   |-- styles/
 |   |   |-- App.js
 |   |   `-- index.js
 |   |-- .env.example
 |   |-- Dockerfile
+|   |-- Dockerfile.e2e
 |   |-- package.json
+|   |-- playwright.config.js
 |   `-- README.md
 |-- docker-compose.yml
 |-- .gitignore
@@ -95,20 +103,23 @@ ToDoApp/
 
 ## Funcionalidades
 
-- [x] Ambiente dockerizado (backend Flask + frontend React)
-- [x] Cadastro de usuários
-- [x] Login com sessão baseada em cookie
+- [x] Ambiente dockerizado com frontend e backend
+- [x] Cadastro de usuarios
+- [x] Login com sessao baseada em cookie
 - [x] Logout
-- [x] CRUD de tarefas (criar, editar, deletar)
-- [x] Marcar tarefa como concluída
-- [x] Mostrar tarefas por usuário
-- [x] Página inicial pública
-- [x] Telas de login e registro
-- [x] Página de perfil
+- [x] CRUD de tarefas
+- [x] Marcar tarefa como concluida
+- [x] Tarefas isoladas por usuario
+- [x] Pagina inicial publica
+- [x] Telas de login e cadastro
+- [x] Pagina de perfil
 - [x] Mensagens de erro e sucesso no frontend
 - [x] Frontend responsivo
-- [x] Filtros de tarefas
-- [x] Busca de tarefas
+- [x] Filtros e busca de tarefas
+- [x] Validacao de senha mais forte
+- [x] Protecao basica contra brute force no login
+- [x] Testes unitarios e smoke no frontend
+- [x] Smoke E2E com Playwright
 
 ---
 
@@ -120,12 +131,13 @@ Base URL:
 http://localhost:5000/api/v1
 ```
 
-### Usuários
+### Usuarios
 
 - `POST /users/register`
 - `POST /users/login`
 - `POST /users/logout`
 - `GET /users/me`
+- `GET /users/:id`
 - `PUT /users/:id`
 - `DELETE /users/:id`
 
@@ -133,6 +145,7 @@ http://localhost:5000/api/v1
 
 - `GET /tasks`
 - `POST /tasks`
+- `GET /tasks/:id`
 - `PUT /tasks/:id`
 - `DELETE /tasks/:id`
 
@@ -154,36 +167,38 @@ http://localhost:5000/api/v1
 
 ### Backend
 
-- [x] Montar estrutura inicial backend com Flask e Docker
-- [x] Configuração e criação do banco de dados (SQLite)
-- [x] Criar API Flask com Blueprints
-- [x] Criar modelos `User` e `Task`
-- [x] Implementar autenticação baseada em sessão
-- [x] Configurar CORS para o frontend
-- [x] Implementar rotas protegidas e tratamento JSON de erro
+- [x] Estrutura inicial com Flask e Docker
+- [x] Banco SQLite
+- [x] API com Blueprints
+- [x] Models `User` e `Task`
+- [x] Autenticacao baseada em sessao
+- [x] CORS para o frontend
+- [x] Tratamento JSON de erro
+- [x] Validacao de senha
+- [x] Protecao basica contra brute force
 
 ### Frontend
 
-- [x] Montar estrutura inicial frontend com React e Docker
-- [x] Criar telas:
-  - [x] Página inicial
-  - [x] Login / Registro
-  - [x] Lista de tarefas
-  - [x] Criar / Editar tarefa
-  - [x] Perfil
-- [x] Manter sessão do usuário com cookies e `credentials: "include"`
-- [x] Consumir API pelo frontend
-- [x] Mostrar mensagens de erro/sucesso
-- [x] Criar testes unitários e smoke tests
+- [x] Estrutura inicial com React e Docker
+- [x] Pagina inicial publica
+- [x] Login e cadastro
+- [x] Lista de tarefas
+- [x] Criacao e edicao de tarefa
+- [x] Perfil
+- [x] Sessao com cookies e `credentials: "include"`
+- [x] Integracao com a API
+- [x] Mensagens de erro e sucesso
+- [x] Testes unitarios e smoke
+- [x] Smoke E2E
 
-### Estilização e Deploy
+### Estilizacao e Publicacao
 
-- [x] Estilização customizada
+- [x] Estilizacao customizada
 - [x] Responsividade
 - [ ] Deploy do frontend
 - [ ] Deploy do backend
-- [ ] Adicionar prints no README
-- [ ] Adicionar link público da aplicação
+- [ ] Adicionar screenshots no README
+- [ ] Adicionar link publico da aplicacao
 
 ---
 
@@ -192,36 +207,53 @@ http://localhost:5000/api/v1
 ### Backend
 
 ```bash
-docker compose exec backend pytest
+docker compose exec backend python -m pytest -q
 ```
 
-### Frontend
+### Frontend unitario e smoke
 
 ```bash
 docker compose exec frontend npm test -- --watchAll=false
 ```
 
-Atualmente o frontend possui:
+### Build do frontend
 
-- testes unitários de helpers
-- testes de fumaça cobrindo home, login, cadastro, proteção de rota, dashboard e logout
+```bash
+docker compose exec frontend npm run build
+```
+
+### Smoke E2E
+
+```bash
+docker compose run --rm e2e
+```
+
+Hoje o projeto cobre:
+
+- testes de backend para autenticacao, usuarios, tarefas e helpers
+- testes unitarios de helpers no frontend
+- smoke tests de navegacao e fluxos principais no frontend
+- smoke E2E real com navegador contra backend e frontend rodando
 
 ---
 
 ## Extras
 
-- [x] Filtro por tarefas concluídas/não concluídas
-- [x] Página de perfil do usuário
-- [x] Testes unitários no frontend
-- [ ] Tema escuro/claro com alternância
-- [ ] Deploy em produção
+- [x] Filtro por tarefas concluidas e em aberto
+- [x] Pagina de perfil do usuario
+- [x] Testes automatizados no backend
+- [x] Testes unitarios no frontend
+- [x] Smoke E2E
+- [ ] Tema escuro/claro com alternancia
+- [ ] Deploy em producao
 
 ---
 
-## Referências
+## Referencias
 
-- Documentação Flask: <https://flask.palletsprojects.com/en/stable/>
+- Flask: <https://flask.palletsprojects.com/en/stable/>
 - React: <https://react.dev/>
+- Playwright: <https://playwright.dev/>
 
 ---
 
@@ -230,7 +262,7 @@ Atualmente o frontend possui:
 
 ## Goal
 
-Build a full-stack web application with **React on the frontend** and **Flask on the backend**, including user authentication, task CRUD operations, and a structure ready for deployment.
+Build a full stack web application with **React on the frontend** and **Flask on the backend**, including user authentication, task CRUD, and a solid local foundation for future deployment.
 
 ---
 
@@ -239,9 +271,9 @@ Build a full-stack web application with **React on the frontend** and **Flask on
 - **Frontend:** React (JavaScript) + Fetch API + custom CSS
 - **Backend:** Python (Flask + Flask-Login + Flask-SQLAlchemy + Flask-Migrate + Flask-CORS)
 - **Database:** SQLite
-- **Environment:** Docker (frontend and backend containers via Docker Compose)
+- **Environment:** Docker and Docker Compose
 - **Authentication:** HTTP-only cookie session
-- **Tests:** Jest + Testing Library on the frontend, Pytest on the backend
+- **Tests:** Jest + Testing Library + Playwright on the frontend, Pytest on the backend
 
 ### Stack Note
 
@@ -251,32 +283,32 @@ The original plan mentioned **Axios**, **Bootstrap**, and **JWT**, but the curre
 - `Bootstrap` was replaced with custom CSS
 - `JWT` was replaced with session-based authentication using `Flask-Login`
 
-These changes were made to keep the app simpler and better aligned with the current web flow of the project.
+This made the project simpler and better aligned with the current web flow of the application.
 
 ---
 
 ## Run Locally with Docker
 
-1. **Requirements:**  
-   Docker Desktop (Windows/Mac) or Docker Engine + Docker Compose (Linux)
+1. **Requirements**
+   Docker Desktop on Windows/Mac, or Docker Engine + Docker Compose on Linux
 
-2. **Clone the repository:**
+2. **Clone the repository**
 
-   ```bash
-   git clone https://github.com/LukasDeadMan/ToDoListApp.git
-   cd ToDoApp
-   ```
+```bash
+git clone https://github.com/LukasDeadMan/ToDoListApp.git
+cd ToDoApp
+```
 
-3. **Build and start the containers:**
+3. **Start the containers**
 
-   ```bash
-   docker compose up --build
-   ```
+```bash
+docker compose up --build
+```
 
-4. **Available services:**
+4. **Available services**
 
-- Frontend: <http://localhost:3000>
-- Backend: <http://localhost:5000>
+- Frontend React app: <http://localhost:3000>
+- Backend Flask API: <http://localhost:5000>
 - Backend health check: <http://localhost:5000/status>
 
 ---
@@ -288,27 +320,35 @@ ToDoApp/
 |-- backend/
 |   |-- app/
 |   |   |-- routes/
-|   |   |   |-- users.py
-|   |   |   `-- tasks.py
+|   |   |   |-- tasks.py
+|   |   |   `-- users.py
 |   |   |-- __init__.py
 |   |   |-- extensions.py
-|   |   `-- models.py
+|   |   |-- models.py
+|   |   `-- security.py
 |   |-- migrations/
 |   |-- tests/
 |   |-- Dockerfile
+|   |-- pytest.ini
 |   |-- requirements.txt
 |   `-- run.py
 |-- frontend/
+|   |-- e2e/
 |   |-- public/
 |   |-- src/
 |   |   |-- components/
+|   |   |-- hooks/
 |   |   |-- lib/
 |   |   |-- pages/
+|   |   |-- services/
+|   |   |-- styles/
 |   |   |-- App.js
 |   |   `-- index.js
 |   |-- .env.example
 |   |-- Dockerfile
+|   |-- Dockerfile.e2e
 |   |-- package.json
+|   |-- playwright.config.js
 |   `-- README.md
 |-- docker-compose.yml
 |-- .gitignore
@@ -323,16 +363,19 @@ ToDoApp/
 - [x] User registration
 - [x] Login with cookie-based session
 - [x] Logout
-- [x] Task CRUD (create, edit, delete)
+- [x] Task CRUD
 - [x] Mark task as completed
-- [x] Display tasks per user
+- [x] Tasks isolated per user
 - [x] Public landing page
-- [x] Login and register pages
+- [x] Login and registration pages
 - [x] Profile page
 - [x] Frontend success and error messages
-- [x] Frontend responsive layout
-- [x] Task filters
-- [x] Task search
+- [x] Responsive frontend
+- [x] Task filters and search
+- [x] Stronger password validation
+- [x] Basic brute-force protection on login
+- [x] Frontend unit and smoke tests
+- [x] Playwright E2E smoke test
 
 ---
 
@@ -350,6 +393,7 @@ http://localhost:5000/api/v1
 - `POST /users/login`
 - `POST /users/logout`
 - `GET /users/me`
+- `GET /users/:id`
 - `PUT /users/:id`
 - `DELETE /users/:id`
 
@@ -357,6 +401,7 @@ http://localhost:5000/api/v1
 
 - `GET /tasks`
 - `POST /tasks`
+- `GET /tasks/:id`
 - `PUT /tasks/:id`
 - `DELETE /tasks/:id`
 
@@ -378,29 +423,31 @@ http://localhost:5000/api/v1
 
 ### Backend
 
-- [x] Set up initial backend structure with Flask and Docker
-- [x] Configure and create the database (SQLite)
-- [x] Create the Flask API using Blueprints
-- [x] Create `User` and `Task` models
-- [x] Implement session-based authentication
-- [x] Configure CORS for the frontend
-- [x] Implement protected routes and JSON error handling
+- [x] Initial Flask and Docker structure
+- [x] SQLite database
+- [x] Blueprint-based API
+- [x] `User` and `Task` models
+- [x] Session-based authentication
+- [x] Frontend CORS setup
+- [x] JSON error handling
+- [x] Password validation
+- [x] Basic brute-force protection
 
 ### Frontend
 
-- [x] Set up initial frontend structure with React and Docker
-- [x] Create pages:
-  - [x] Landing page
-  - [x] Login / Register
-  - [x] Task list
-  - [x] Create / Edit task
-  - [x] Profile
-- [x] Keep user session using cookies and `credentials: "include"`
-- [x] Consume the API from the frontend
-- [x] Show success and error messages
-- [x] Add unit tests and smoke tests
+- [x] Initial React and Docker structure
+- [x] Public landing page
+- [x] Login and registration
+- [x] Task list
+- [x] Create and edit task flow
+- [x] Profile
+- [x] Session cookies with `credentials: "include"`
+- [x] API integration
+- [x] Success and error messages
+- [x] Unit and smoke tests
+- [x] E2E smoke test
 
-### Styling and Deployment
+### Styling and Publishing
 
 - [x] Custom styling
 - [x] Responsiveness
@@ -416,27 +463,43 @@ http://localhost:5000/api/v1
 ### Backend
 
 ```bash
-docker compose exec backend pytest
+docker compose exec backend python -m pytest -q
 ```
 
-### Frontend
+### Frontend unit and smoke
 
 ```bash
 docker compose exec frontend npm test -- --watchAll=false
 ```
 
-The frontend currently includes:
+### Frontend build
 
-- helper unit tests
-- smoke tests covering home, login, registration, route protection, dashboard, and logout
+```bash
+docker compose exec frontend npm run build
+```
+
+### E2E smoke
+
+```bash
+docker compose run --rm e2e
+```
+
+Current automated coverage includes:
+
+- backend tests for authentication, users, tasks, and helpers
+- frontend helper unit tests
+- frontend smoke tests for main navigation and core flows
+- real browser E2E smoke against the running backend and frontend
 
 ---
 
 ## Extras
 
-- [x] Filter completed/incomplete tasks
+- [x] Completed/open task filtering
 - [x] User profile page
+- [x] Automated backend tests
 - [x] Frontend unit tests
+- [x] E2E smoke test
 - [ ] Dark/light theme toggle
 - [ ] Production deployment
 
@@ -444,17 +507,6 @@ The frontend currently includes:
 
 ## References
 
-- Flask documentation: <https://flask.palletsprojects.com/en/stable/>
+- Flask: <https://flask.palletsprojects.com/en/stable/>
 - React: <https://react.dev/>
-
----
-
-## Notes
-
-The original plan mentioned **Axios**, **Bootstrap**, and **JWT**, but the current implementation uses:
-
-- `fetch` instead of Axios
-- custom CSS instead of Bootstrap
-- session cookies with `Flask-Login` instead of JWT
-
-This reflects the actual implementation currently in the repository.
+- Playwright: <https://playwright.dev/>
