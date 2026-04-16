@@ -1,0 +1,30 @@
+:root {
+  --page-max-width: 1380px;
+  --bg-base: #14141a;
+  --bg-canvas: #181821;
+  --bg-sidebar: rgba(16, 16, 22, 0.94);
+  --bg-panel: rgba(28, 29, 38, 0.92);
+  --bg-panel-strong: rgba(34, 35, 45, 0.96);
+  --bg-panel-soft: rgba(23, 24, 32, 0.86);
+  --line-soft: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --text-main: #eff1ff;
+  --text-soft: #a4a9c6;
+  --text-muted: #7b819d;
+  --accent-main: #8b84ff;
+  --accent-strong: #746cff;
+  --accent-soft: rgba(139, 132, 255, 0.14);
+  --success-main: #69c08e;
+  --success-soft: rgba(105, 192, 142, 0.14);
+  --danger-main: #f08e7f;
+  --danger-soft: rgba(240, 142, 127, 0.14);
+  --info-main: #88b3ff;
+  --info-soft: rgba(136, 179, 255, 0.14);
+  --shadow-xl: 0 32px 70px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 18px 36px rgba(0, 0, 0, 0.24);
+  --shadow-sm: 0 10px 20px rgba(0, 0, 0, 0.18);
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+}

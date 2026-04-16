@@ -1,9 +1,10 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
-import { tasksApi, usersApi } from "./lib/api";
+import { tasksApi } from "./services/tasks";
+import { usersApi } from "./services/users";
 
-jest.mock("./lib/api", () => {
+jest.mock("./services/users", () => {
   const usersApi = {
     register: jest.fn(),
     login: jest.fn(),
@@ -13,6 +14,12 @@ jest.mock("./lib/api", () => {
     delete: jest.fn(),
   };
 
+  return {
+    usersApi,
+  };
+});
+
+jest.mock("./services/tasks", () => {
   const tasksApi = {
     list: jest.fn(),
     create: jest.fn(),
@@ -21,7 +28,6 @@ jest.mock("./lib/api", () => {
   };
 
   return {
-    usersApi,
     tasksApi,
   };
 });

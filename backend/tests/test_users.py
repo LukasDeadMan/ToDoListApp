@@ -1,6 +1,6 @@
 import unittest
 
-from api_case import ApiTestCase
+from tests.api_case import ApiTestCase
 from app.models import Task, User
 
 

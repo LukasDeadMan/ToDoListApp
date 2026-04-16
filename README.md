@@ -1,295 +1,460 @@
-# 📝 ToDo List App
-[🇧🇷 Português](#portugues) | [🇺🇸 English](#english)
+# ToDo List App
+[Português](#portugues) | [English](#english)
 
 <a id="portugues"></a>
-## 🇧🇷 Português
+## Português
 
-## 🎯 Objetivo
+## Objetivo
 
-Criar uma aplicação web fullstack usando **React no frontend** e **Flask no backend**, com autenticação de usuários, CRUD de tarefas e deploy gratuito.
-
----
-
-## 🧱 Stack Tecnológica
-
-- **Frontend:** React (JavaScript) + Axios + CSS/Bootstrap  
-- **Backend:** Python (Flask + Flask-Login + Flask-CORS)  
-- **Banco de dados:** SQLite  
-- **Ambiente:** Docker (container para frontend e backend, via docker-compose)
-- **Extras:** JWT (ou sessões), deploy no Render/Railway/Vercel  
+Criar uma aplicação web fullstack usando **React no frontend** e **Flask no backend**, com autenticação de usuários, CRUD de tarefas e estrutura pronta para deploy.
 
 ---
 
-## 🐳 Como rodar localmente com Docker
+## Stack Tecnológica
+
+- **Frontend:** React (JavaScript) + Fetch API + CSS customizado
+- **Backend:** Python (Flask + Flask-Login + Flask-SQLAlchemy + Flask-Migrate + Flask-CORS)
+- **Banco de dados:** SQLite
+- **Ambiente:** Docker (container para frontend e backend via Docker Compose)
+- **Autenticação:** Sessão com cookie HTTP-only
+- **Testes:** Jest + Testing Library no frontend, Pytest no backend
+
+### Observação sobre a stack
+
+O planejamento inicial mencionava **Axios**, **Bootstrap** e **JWT**, mas a implementação atual seguiu outro caminho:
+
+- `Axios` foi substituído por `fetch`
+- `Bootstrap` foi substituído por CSS próprio
+- `JWT` foi substituído por autenticação baseada em sessão com `Flask-Login`
+
+Essas mudanças foram feitas para simplificar a aplicação e combinar melhor com o fluxo web atual do projeto.
+
+---
+
+## Como rodar localmente com Docker
 
 1. **Pré-requisitos:**  
-   Docker Desktop (Windows/Mac) ou Docker + Docker Compose (Linux)
+   Docker Desktop (Windows/Mac) ou Docker Engine + Docker Compose (Linux)
 
 2. **Clone o repositório:**
 
    ```bash
    git clone https://github.com/LukasDeadMan/ToDoListApp.git
    cd ToDoApp
+   ```
 
 3. **Build e execute os containers:**
 
-    ```bash
-    docker-compose up --build  
-    ```
+   ```bash
+   docker compose up --build
+   ```
 
-    Isso irá subir:
+4. **Serviços disponíveis:**
 
-    - Backend Flask: <http://localhost:5000>
+   - Frontend React: <http://localhost:3000>
+   - Backend Flask: <http://localhost:5000>
+   - Healthcheck backend: <http://localhost:5000/status>
 
-    - Frontend React: <http://localhost:3000>
-
-4. **Pronto!**  
-    Agora é só começar a desenvolver nos diretórios frontend e backend. As alterações refletem automaticamente dentro dos containers.  
-  
 ---
 
-## 🗂️ Estrutura de Pastas
+## Estrutura de Pastas
 
-```
+```text
 ToDoApp/
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── models.py
-│   │   ├── extensions.py
-│   │   └──routes/
-│   │      ├── users.py
-│   │      ├── tasks.py
-│   ├── run.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── App.js
-│   │   └── index.js
-│   ├── package.json
-│   ├── Dockerfile
-│   └── .dockerignore
-│
-├── docker-compose.yml
-├── .gitignore
-└── README.md
+|-- backend/
+|   |-- app/
+|   |   |-- routes/
+|   |   |   |-- users.py
+|   |   |   `-- tasks.py
+|   |   |-- __init__.py
+|   |   |-- extensions.py
+|   |   `-- models.py
+|   |-- migrations/
+|   |-- tests/
+|   |-- Dockerfile
+|   |-- requirements.txt
+|   `-- run.py
+|-- frontend/
+|   |-- public/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- lib/
+|   |   |-- pages/
+|   |   |-- App.js
+|   |   `-- index.js
+|   |-- .env.example
+|   |-- Dockerfile
+|   |-- package.json
+|   `-- README.md
+|-- docker-compose.yml
+|-- .gitignore
+`-- README.md
 ```
 
 ---
 
-## ✅ Funcionalidades (roadmap)
+## Funcionalidades
 
-- [x] Ambiente dockerizado (backend Flask, frontend React)
-- [x] Cadastro e login de usuários (autenticação JWT ou sessão)
+- [x] Ambiente dockerizado (backend Flask + frontend React)
+- [x] Cadastro de usuários
+- [x] Login com sessão baseada em cookie
 - [x] Logout
 - [x] CRUD de tarefas (criar, editar, deletar)
 - [x] Marcar tarefa como concluída
 - [x] Mostrar tarefas por usuário
-- [ ] Frontend responsivo com React
+- [x] Página inicial pública
+- [x] Telas de login e registro
+- [x] Página de perfil
+- [x] Mensagens de erro e sucesso no frontend
+- [x] Frontend responsivo
+- [x] Filtros de tarefas
+- [x] Busca de tarefas
 
 ---
 
-## 📆 Cronograma de Desenvolvimento (3 semanas)
+## Rotas da API
 
-### Semana 1 – Backend (Flask + Auth)
+Base URL:
 
-- [x] Montar estrutura inicial backend com Flask e Docker  
-- [x] Configuração e criação do banco de dados (SQLite)  
-- [x] Criar API Flask com Blueprints  
-- [x] Criar modelos: `User`, `Task`  
-- [x] Implementar rotas:  
-  - [x] `POST /register`  
-  - [x] `POST /login`  
-  - [x] `GET /logout`  
-- [x] Retornar tokens JWT (ou usar Flask-Login com sessões)  
-- [x] CORS para permitir requisições do React  
+```text
+http://localhost:5000/api/v1
+```
 
-### Semana 2 – Frontend com React
+### Usuários
+
+- `POST /users/register`
+- `POST /users/login`
+- `POST /users/logout`
+- `GET /users/me`
+- `PUT /users/:id`
+- `DELETE /users/:id`
+
+### Tarefas
+
+- `GET /tasks`
+- `POST /tasks`
+- `PUT /tasks/:id`
+- `DELETE /tasks/:id`
+
+---
+
+## Rotas do Frontend
+
+- `/`
+- `/login`
+- `/register`
+- `/tasks`
+- `/tasks/new`
+- `/tasks/:taskId/edit`
+- `/profile`
+
+---
+
+## Cronograma de Desenvolvimento
+
+### Backend
+
+- [x] Montar estrutura inicial backend com Flask e Docker
+- [x] Configuração e criação do banco de dados (SQLite)
+- [x] Criar API Flask com Blueprints
+- [x] Criar modelos `User` e `Task`
+- [x] Implementar autenticação baseada em sessão
+- [x] Configurar CORS para o frontend
+- [x] Implementar rotas protegidas e tratamento JSON de erro
+
+### Frontend
 
 - [x] Montar estrutura inicial frontend com React e Docker
-- [ ] Criar telas:
-  - Login / Registro
-  - Lista de tarefas
-  - Criar / Editar tarefa
-- [ ] Manter sessão do usuário no frontend com cookies/credentials
-- [ ] Consumir API usando Axios
-- [ ] Mostrar mensagens de erro/sucesso
+- [x] Criar telas:
+  - [x] Página inicial
+  - [x] Login / Registro
+  - [x] Lista de tarefas
+  - [x] Criar / Editar tarefa
+  - [x] Perfil
+- [x] Manter sessão do usuário com cookies e `credentials: "include"`
+- [x] Consumir API pelo frontend
+- [x] Mostrar mensagens de erro/sucesso
+- [x] Criar testes unitários e smoke tests
 
-### Semana 3 – Estilização e Deploy
+### Estilização e Deploy
 
-- [ ] Estilizar com Bootstrap ou styled-components
-- [ ] Responsividade
-- [ ] Deploy:
-  - Frontend no Vercel ou Netlify
-  - Backend no Render ou Railway
-- [ ] Criar README com:
-  - Prints
-  - Link da aplicação
-  - Instruções para rodar localmente
-  - Tecnologias usadas
+- [x] Estilização customizada
+- [x] Responsividade
+- [ ] Deploy do frontend
+- [ ] Deploy do backend
+- [ ] Adicionar prints no README
+- [ ] Adicionar link público da aplicação
 
 ---
 
-## 📚 Referências
+## Testes
+
+### Backend
+
+```bash
+docker compose exec backend pytest
+```
+
+### Frontend
+
+```bash
+docker compose exec frontend npm test -- --watchAll=false
+```
+
+Atualmente o frontend possui:
+
+- testes unitários de helpers
+- testes de fumaça cobrindo home, login, cadastro, proteção de rota, dashboard e logout
+
+---
+
+## Extras
+
+- [x] Filtro por tarefas concluídas/não concluídas
+- [x] Página de perfil do usuário
+- [x] Testes unitários no frontend
+- [ ] Tema escuro/claro com alternância
+- [ ] Deploy em produção
+
+---
+
+## Referências
 
 - Documentação Flask: <https://flask.palletsprojects.com/en/stable/>
+- React: <https://react.dev/>
 
 ---
-
-## 🚀 Extras (opcional)
-
-- [ ] Filtro por tarefas concluídas/não concluídas
-- [ ] Tema escuro/claro
-- [ ] Página de perfil do usuário
-- [ ] Testes unitários (Jest ou Pytest)
 
 <a id="english"></a>
-## 🇺🇸 English
+## English
 
-## 🎯 Goal
+## Goal
 
-Build a full-stack web application using **React on the frontend** and **Flask on the backend**, with user authentication, task CRUD operations, and free deployment.
+Build a full-stack web application with **React on the frontend** and **Flask on the backend**, including user authentication, task CRUD operations, and a structure ready for deployment.
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
-- **Frontend:** React (JavaScript) + Axios + CSS/Bootstrap
-- **Backend:** Python (Flask + Flask-Login + Flask-CORS)
+- **Frontend:** React (JavaScript) + Fetch API + custom CSS
+- **Backend:** Python (Flask + Flask-Login + Flask-SQLAlchemy + Flask-Migrate + Flask-CORS)
 - **Database:** SQLite
-- **Environment:** Docker (frontend and backend containers via docker-compose)
-- **Extras:** JWT (or sessions), deployment on Render/Railway/Vercel
+- **Environment:** Docker (frontend and backend containers via Docker Compose)
+- **Authentication:** HTTP-only cookie session
+- **Tests:** Jest + Testing Library on the frontend, Pytest on the backend
+
+### Stack Note
+
+The original plan mentioned **Axios**, **Bootstrap**, and **JWT**, but the current implementation follows a different path:
+
+- `Axios` was replaced with `fetch`
+- `Bootstrap` was replaced with custom CSS
+- `JWT` was replaced with session-based authentication using `Flask-Login`
+
+These changes were made to keep the app simpler and better aligned with the current web flow of the project.
 
 ---
 
-## 🐳 Running Locally with Docker
+## Run Locally with Docker
+
 1. **Requirements:**  
-   Docker Desktop (Windows/Mac) or Docker + Docker Compose (Linux)
+   Docker Desktop (Windows/Mac) or Docker Engine + Docker Compose (Linux)
 
 2. **Clone the repository:**
 
    ```bash
    git clone https://github.com/LukasDeadMan/ToDoListApp.git
    cd ToDoApp
+   ```
 
-3. **Build and run the containers:**
+3. **Build and start the containers:**
 
-    ```bash
-    docker-compose up --build  
-    ```
+   ```bash
+   docker compose up --build
+   ```
 
-   This will start:
+4. **Available services:**
 
-    - Backend Flask: <http://localhost:5000>
-
-    - Frontend React: <http://localhost:3000>
-
-4. **Done!**  
-    Now you can start developing inside the frontend and backend directories. Changes are automatically reflected inside the containers.
+- Frontend: <http://localhost:3000>
+- Backend: <http://localhost:5000>
+- Backend health check: <http://localhost:5000/status>
 
 ---
 
 ## Folder Structure
 
-```
+```text
 ToDoApp/
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── models.py
-│   │   ├── extensions.py
-│   │   └──routes/
-│   │      ├── users.py
-│   │      ├── tasks.py
-│   ├── run.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── App.js
-│   │   └── index.js
-│   ├── package.json
-│   ├── Dockerfile
-│   └── .dockerignore
-│
-├── docker-compose.yml
-├── .gitignore
-└── README.md
+|-- backend/
+|   |-- app/
+|   |   |-- routes/
+|   |   |   |-- users.py
+|   |   |   `-- tasks.py
+|   |   |-- __init__.py
+|   |   |-- extensions.py
+|   |   `-- models.py
+|   |-- migrations/
+|   |-- tests/
+|   |-- Dockerfile
+|   |-- requirements.txt
+|   `-- run.py
+|-- frontend/
+|   |-- public/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- lib/
+|   |   |-- pages/
+|   |   |-- App.js
+|   |   `-- index.js
+|   |-- .env.example
+|   |-- Dockerfile
+|   |-- package.json
+|   `-- README.md
+|-- docker-compose.yml
+|-- .gitignore
+`-- README.md
 ```
 
 ---
 
-## ✅ Features (roadmap)
+## Features
 
-- [x] Dockerized environment (Flask backend, React frontend)
-- [x] User registration and login (JWT or session-based authentication)
+- [x] Dockerized frontend and backend
+- [x] User registration
+- [x] Login with cookie-based session
 - [x] Logout
 - [x] Task CRUD (create, edit, delete)
-- [x] Mark tasks as completed
+- [x] Mark task as completed
 - [x] Display tasks per user
-- [ ] Responsive frontend with React
+- [x] Public landing page
+- [x] Login and register pages
+- [x] Profile page
+- [x] Frontend success and error messages
+- [x] Frontend responsive layout
+- [x] Task filters
+- [x] Task search
 
 ---
 
-## 📆 Development Timeline (3 weeks)
+## API Routes
 
-### Week 1 – Backend (Flask + Auth)
+Base URL:
+
+```text
+http://localhost:5000/api/v1
+```
+
+### Users
+
+- `POST /users/register`
+- `POST /users/login`
+- `POST /users/logout`
+- `GET /users/me`
+- `PUT /users/:id`
+- `DELETE /users/:id`
+
+### Tasks
+
+- `GET /tasks`
+- `POST /tasks`
+- `PUT /tasks/:id`
+- `DELETE /tasks/:id`
+
+---
+
+## Frontend Routes
+
+- `/`
+- `/login`
+- `/register`
+- `/tasks`
+- `/tasks/new`
+- `/tasks/:taskId/edit`
+- `/profile`
+
+---
+
+## Development Timeline
+
+### Backend
 
 - [x] Set up initial backend structure with Flask and Docker
 - [x] Configure and create the database (SQLite)
-- [x] Create Flask API using Blueprints
-- [x] Create models: User, Task
-- [x] Implement routes: 
-  - [x] `POST /register`  
-  - [x] `POST /login`  
-  - [x] `GET /logout`  
-- [x] Return JWT tokens (or use Flask-Login with sessions)
-- [x] Configure CORS to allow React requests
+- [x] Create the Flask API using Blueprints
+- [x] Create `User` and `Task` models
+- [x] Implement session-based authentication
+- [x] Configure CORS for the frontend
+- [x] Implement protected routes and JSON error handling
 
-### Week 2 – Frontend with React
+### Frontend
 
 - [x] Set up initial frontend structure with React and Docker
-- [ ] Create pages:
-  - Login / Register
-  - Task list
-  - Create / Edit task
-- [ ] Maintain the user session on the frontend using cookies and credentials.
-- [ ] Consume the API using Axios
-- [ ] Display success/error messages
+- [x] Create pages:
+  - [x] Landing page
+  - [x] Login / Register
+  - [x] Task list
+  - [x] Create / Edit task
+  - [x] Profile
+- [x] Keep user session using cookies and `credentials: "include"`
+- [x] Consume the API from the frontend
+- [x] Show success and error messages
+- [x] Add unit tests and smoke tests
 
-### Week 3 – Styling and Deployment
+### Styling and Deployment
 
-- [ ] Style with Bootstrap or styled-components
-- [ ] Responsiveness
-- [ ] Deployment:
-  - Frontend on Vercel or Netlify
-  - Backend on Render or Railway
-- [ ] Improve README with:
-  - Screenshots
-  - App link
-  - Local setup instructions
-  - Technologies used
+- [x] Custom styling
+- [x] Responsiveness
+- [ ] Frontend deployment
+- [ ] Backend deployment
+- [ ] Add screenshots to the README
+- [ ] Add a public app link
 
 ---
 
-## 📚 References
+## Tests
+
+### Backend
+
+```bash
+docker compose exec backend pytest
+```
+
+### Frontend
+
+```bash
+docker compose exec frontend npm test -- --watchAll=false
+```
+
+The frontend currently includes:
+
+- helper unit tests
+- smoke tests covering home, login, registration, route protection, dashboard, and logout
+
+---
+
+## Extras
+
+- [x] Filter completed/incomplete tasks
+- [x] User profile page
+- [x] Frontend unit tests
+- [ ] Dark/light theme toggle
+- [ ] Production deployment
+
+---
+
+## References
 
 - Flask documentation: <https://flask.palletsprojects.com/en/stable/>
+- React: <https://react.dev/>
 
 ---
 
-## 🚀 Extras (optional)
+## Notes
 
-- [ ] Filter completed/incomplete tasks
-- [ ] Dark/light theme
-- [ ] User profile page
-- [ ] Unit tests (Jest or Pytest)
+The original plan mentioned **Axios**, **Bootstrap**, and **JWT**, but the current implementation uses:
+
+- `fetch` instead of Axios
+- custom CSS instead of Bootstrap
+- session cookies with `Flask-Login` instead of JWT
+
+This reflects the actual implementation currently in the repository.
